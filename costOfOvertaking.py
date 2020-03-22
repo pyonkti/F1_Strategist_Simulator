@@ -32,8 +32,8 @@ def tyreCondition(currentLap,inputDataFrame,lastPitDict,pitTimesDict):
     for i in range(len(set(inputDataFrame['code']))):
         for key,value in pitTimesDict.items():
             if key == inputDataFrame['code'][i]:
-                expectedLapsOnTyre = re.search(r'\d+',str(inputDataFrame.iloc[i,9+value])).group()
-                currentTyre = re.search(r'^[a-zA-Z]*\s*[a-zA-Z]*',str(inputDataFrame.iloc[i,9+value])).group()
+                expectedLapsOnTyre = re.search(r'\d+',str(inputDataFrame.iloc[i,6+value])).group()
+                currentTyre = re.search(r'^[a-zA-Z]*\s*[a-zA-Z]*',str(inputDataFrame.iloc[i,6+value])).group()
                 if currentLap == lastPitDict[key] + int(expectedLapsOnTyre):
                     allTyreChoice.append(str(currentLap-lastPitDict[key])+" "+currentTyre+'\033[35m PIT\033[0m')
                 else:
