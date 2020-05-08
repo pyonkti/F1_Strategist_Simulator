@@ -3,6 +3,7 @@
 Created on Thu Mar 19 18:54:32 2020
 
 @author: Billy
+
 """
 
 import HamLapTimeGenerator as HamLTG
@@ -122,7 +123,13 @@ class Race(object):
         if emptyFlag:
             temp['tyreCondition'] = self.tyreCondition(pd.DataFrame([temp])) 
             temp['selfComparison'] = '+00.00'
-            self.driverLastLapTimeDict[key] = int(temp['milliseconds'])
+            temp['milliseconds'] = self.driverLastLapTimeDict[key]
+            timeStamp = temp['milliseconds']
+            timeStamp /= 1000.0
+            timearr = datetime.fromtimestamp(timeStamp)
+            otherStyleTime = datetime.strftime(timearr,"%M:%S.%f")[:-3]
+            outputTime = str(otherStyleTime)
+            temp['time'] = outputTime
             self.result.loc[self.renewOrder] = temp
         timeStamp = temp['totalTimeCost'] - int(self.result.iloc[0,6])
         timeStamp /= 1000.0
@@ -130,7 +137,7 @@ class Race(object):
         otherStyleTime = datetime.strftime(timearr,"%M:%S.%f")[:-3]
         timeGap = str("+"+otherStyleTime)
         self.result.iloc[self.renewOrder,7] = timeGap   
-        print(self.result[['code','lap','position','time','timeGap','selfComparison','tyreCondition']])
+        print(self.result[['code','lap','time','timeGap','selfComparison','tyreCondition']])
         
     def fun_timer(self,event):
         if self.pauseFlag:
@@ -142,6 +149,8 @@ class Race(object):
                 thisLap = thisLap.reset_index(drop=True)
                 if self.renewOrder == 0:
                     self.codeTuple = tuple(set(thisLap['code']))
+                racerInput = thisLap[thisLap['code'] == key]
+                racerInput.iloc
                 self.output(thisLap[thisLap['code'] == key], key)
                 nextLap = self.raceData[self.raceData['lap'].isin([self.lapDict[key]+1])]
                 nextLap = nextLap.reset_index(drop=True)
@@ -206,10 +215,16 @@ class Race(object):
         firstLap = self.raceData[self.raceData['lap'].isin([1])]
         firstLap = firstLap.reset_index(drop=True)
         for i in range(len(set(firstLap['code']))):
+            if firstLap['code'][i] == "HAM":
+                currentLapTime = HamLTG.startOff(int(HamLTG.lapTimeUsedMedium(2)))
+                self.timeCostDict[firstLap['code'][i]] = currentLapTime
+                self.driverLastLapTimeDict[firstLap['code'][i]] = currentLapTime
+                continue
             for key,value in self.timeCostDict.items():
                 if key == firstLap['code'][i]:
                     currentLapTime = firstLap.iloc[i,5]
-                    self.timeCostDict[key] = currentLapTime                   
+                    self.timeCostDict[key] = currentLapTime
+                    self.driverLastLapTimeDict[key] = currentLapTime
         with keyboard.Listener(on_press=self.on_press,on_release=self.on_release) as listener:
             print("The race is about to Start. Press \"ENTER\" to launch. Press \"Q\" at any time to quit")
             listener.join()
