@@ -1,5 +1,5 @@
 raceId,code,stint1,stint2,stint3,stint4,stint5,stint6
-1012,HAM,Used medium (22),Hard (14),Meidum (20),,,
+1012,HAM,Used medium (56),,,,,
 1012,BOT,Used medium (21),Hard  (15),Meidum (20),,,
 1012,VET,Used medium (18),Hard  (17),Meidum (21),,,
 1012,VER,Used medium (17),Hard  (17),Meidum (22),,,
@@ -17,7 +17,7 @@ raceId,code,stint1,stint2,stint3,stint4,stint5,stint6
 1012,RUS,Medium (22),Hard  (27),Soft (5),,,
 1012,KUB,Medium (26),Hard  (28),,,,
 1012,NOR,Medium (1),Hard  (16),Meidum (17),Soft (16),,
-1012,KVY,Medium (7),Hard  (18),Soft (5),,,
+1012,KVY,Medium (7),Medium (18),Hard  (5),Soft (11),,
 1012,HUL,Used soft (11),Hard  (5),,,,
 991,RIC,Ultra soft (17),Medium (14),Soft (25),,,
 991,BOT,Soft (19),Medium (37),,,,

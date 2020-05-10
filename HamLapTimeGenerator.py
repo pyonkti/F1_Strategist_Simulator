@@ -105,21 +105,23 @@ def lapTimeNewHard(lap):
 def pitTimeGenerate(lastLapTime, newTyre, condition):
     if condition == 'in':
         pitInTime = lastLapTime + lastLapTime * 0.045 + 100 * random.normalvariate(0, 0.618)
-        return pitInTime
+        return int(pitInTime)
     if condition == 'out':
         laneTime = 22544 + 1500 * random.normalvariate(0, 0.618)
-        if newTyre == "medium":
-            pitOuTtime = lapTimeNewMedium(2) * 0.97 + 200 * random.normalvariate(0, 1)
-        if newTyre == "hard":
-            pitOuTtime = lapTimeNewHard(2) * 0.97 + 200 * random.normalvariate(0, 1)
-        return (laneTime+pitOuTtime)
+        if newTyre == "Soft":
+            pitOuTtime = lapTimeNewSoft(2) * 0.97 + 100 * random.normalvariate(0, 1)
+        if newTyre == "Medium":
+            pitOuTtime = lapTimeNewMedium(2) * 0.97 + 100 * random.normalvariate(0, 1)
+        if newTyre == "Hard":
+            pitOuTtime = lapTimeNewHard(2) * 0.97 + 100 * random.normalvariate(0, 1)
+        return (int(laneTime+pitOuTtime))
     
 def startOff(laptime):
     return 1.10569 * laptime + 200 * random.normalvariate(0, 1) #1.10569 comes from HAM/BOT/lEC/VET when first lap divided by the third lap and then take the average
     
 def virtualSafetyCar(expectedLaptime,VscAffectedTime):
     factor = 127700/expectedLaptime #according to the rules of Virtual Safety Car, the gap of all cars would be maintained by following a reference lap which is roughly 30% slower than the leader.
-    return expectedLaptime-VscAffectedTime/factor + VscAffectedTime
+    return expectedLaptime-VscAffectedTime/factor + VscAffectedTime + 100 * random.normalvariate(0, 1)
     
 """    
 def oneStop():
@@ -139,7 +141,7 @@ def oneStop():
 def twoStop():
     timeConsumption = 0
     firstLap = startOff(lapTimeUsedMedium(2)) + 100 * random.normalvariate(0, 1)
-    secondLap = virtualSafetyCar(lapTimeUsedMedium(2),45000) + 100 * random.normalvariate(0, 1)
+    secondLap = virtualSafetyCar(lapTimeUsedMedium(2),45000)
     timeConsumption += firstLap
     timeConsumption += secondLap
     for i in range(3,14):
