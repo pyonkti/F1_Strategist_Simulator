@@ -9,6 +9,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 
+newSoftReferenceDict = {"HAM": 97300, "BOT": 97360, "LEC": 97170, "VET": 97370}
+newMediumReferenceDict = {"HAM": 97300,"BOT": 97360, "LEC": 97170, "VET": 97370}
+usedMediumReferenceDict = {"HAM": 99550, "BOT": 99760, "LEC": 100410, "VET": 100205}
+newHardReferenceDict = {"HAM": 98000, "BOT": 98235, "LEC": 98300, "VET": 98385}
+
+startOffFactorDict = {"HAM": 1.085, "BOT": 1.10, "LEC": 1.116, "VET": 1.123}
+
+vscAffectedTimeDict = {"HAM": 45000, "BOT": 43016, "LEC": 41346, "VET": 40674}
+
 xHamMediumNew = [0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30]
 xHamMediumNew = np.array(xHamMediumNew)
 yHamMediumNew = [0,1051,2215,3292,4150,4867,5660,6170,6998,7631,8839,9398,10030,10680,10396,10607,10942,11776,12518,12991,10000,4000]
@@ -34,7 +43,7 @@ x3 = np.linspace(0, 60, 20)
 def func(x, a, b,c):
     return a*np.sqrt(x)*(b*np.square(x)+c)
 
-def lapTimeUsedMedium(lap):
+def lapTimeUsedMedium(lap,key):
     p = np.polyfit(xHamMediumUsed , yHamMediumUsed , 4) 
     
     """
@@ -47,11 +56,11 @@ def lapTimeUsedMedium(lap):
     """   
     
     deltaTime = 4*p[0]*lap**3 + 3*p[1]*lap**2 + 2*p[2]*lap + p[3]
-    finalTime = 99550 - deltaTime
+    finalTime = usedMediumReferenceDict[key] - deltaTime
     deviation = 200 * random.normalvariate(0, 1)
     return(finalTime+deviation)
     
-def lapTimeNewSoft(lap):
+def lapTimeNewSoft(lap,key):
     p = np.polyfit(xSaiSoftNew , ySaiSoftNew , 4)
     
     """
@@ -64,11 +73,11 @@ def lapTimeNewSoft(lap):
     """   
     
     deltaTime = 4*p[0]*lap**3 + 3*p[1]*lap**2 + 2*p[2]*lap + p[3]
-    finalTime = 97300 - deltaTime
+    finalTime = newSoftReferenceDict[key] - deltaTime
     deviation = 200 * random.normalvariate(0, 1)
     return(finalTime+deviation)
 
-def lapTimeNewMedium(lap):
+def lapTimeNewMedium(lap,key):
     p = np.polyfit(xHamMediumNew , yHamMediumNew , 4) 
     
     """
@@ -81,11 +90,11 @@ def lapTimeNewMedium(lap):
     """    
     
     deltaTime = 4*p[0]*lap**3 + 3*p[1]*lap**2 + 2*p[2]*lap + p[3]
-    finalTime = 97300 - deltaTime
+    finalTime = newMediumReferenceDict[key] - deltaTime
     deviation = 200 * random.normalvariate(0, 1)
     return(finalTime+deviation)
     
-def lapTimeNewHard(lap):
+def lapTimeNewHard(lap,key):
     p = np.polyfit(xHamHardNew , yHamHardNew , 4) 
     
     """
@@ -98,30 +107,30 @@ def lapTimeNewHard(lap):
     """    
     
     deltaTime = 4*p[0]*lap**3 + 3*p[1]*lap**2 + 2*p[2]*lap + p[3]
-    finalTime = 98000 - deltaTime
+    finalTime = newHardReferenceDict[key] - deltaTime
     deviation = 500 * random.normalvariate(0, 1)
     return(finalTime+deviation)
     
-def pitTimeGenerate(lastLapTime, newTyre, condition):
+def pitTimeGenerate(lastLapTime, newTyre, condition, key):
     if condition == 'in':
         pitInTime = lastLapTime + lastLapTime * 0.045 + 100 * random.normalvariate(0, 0.618)
         return int(pitInTime)
     if condition == 'out':
         laneTime = 22544 + 1500 * random.normalvariate(0, 0.618)
         if newTyre == "Soft":
-            pitOuTtime = lapTimeNewSoft(2) * 0.97 + 100 * random.normalvariate(0, 1)
+            pitOuTtime = lapTimeNewSoft(2,key) * 0.97 + 100 * random.normalvariate(0, 1)
         if newTyre == "Medium":
-            pitOuTtime = lapTimeNewMedium(2) * 0.97 + 100 * random.normalvariate(0, 1)
+            pitOuTtime = lapTimeNewMedium(2,key) * 0.97 + 100 * random.normalvariate(0, 1)
         if newTyre == "Hard":
-            pitOuTtime = lapTimeNewHard(2) * 0.97 + 100 * random.normalvariate(0, 1)
+            pitOuTtime = lapTimeNewHard(2,key) * 0.97 + 100 * random.normalvariate(0, 1)
         return (int(laneTime+pitOuTtime))
     
-def startOff(laptime):
-    return 1.10569 * laptime + 200 * random.normalvariate(0, 1) #1.10569 comes from HAM/BOT/lEC/VET when first lap divided by the third lap and then take the average
+def startOff(laptime,key):
+    return startOffFactorDict[key] * laptime #1.10569 comes from HAM/BOT/lEC/VET when first lap divided by the third lap and then take the average
     
-def virtualSafetyCar(expectedLaptime,VscAffectedTime):
+def virtualSafetyCar(expectedLaptime,key):
     factor = 127700/expectedLaptime #according to the rules of Virtual Safety Car, the gap of all cars would be maintained by following a reference lap which is roughly 30% slower than the leader.
-    return expectedLaptime-VscAffectedTime/factor + VscAffectedTime + 100 * random.normalvariate(0, 1)
+    return expectedLaptime-vscAffectedTimeDict[key]/factor + vscAffectedTimeDict[key] + 100 * random.normalvariate(0, 1)
     
 """    
 def oneStop():

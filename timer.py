@@ -34,6 +34,7 @@ class Race(object):
     currentTime = 0
     renewOrder = 0
     dropRacer = list()
+    fastDriversList = list()
     timeCostDict = dict()
     lastLapTuple = tuple()
     lapDict = dict()
@@ -46,6 +47,7 @@ class Race(object):
     pauseFlag = False
     raceEndFlag = False
     lateInstructionFlag = False
+
     result = pd.DataFrame(columns=('code', 'raceId', 'lap', 'position', 'time', 'milliseconds','totalTimeCost','timeGap','selfComparison','tyreCondition'))
     
     def findPosition(self,newestRecord):
@@ -73,18 +75,12 @@ class Race(object):
         return allTyreChoice
     
     def output(self,racerInput,key):
-        dropFlag = False
-        for value in self.dropRacer:
-            dropFlag = True
-            self.result = self.result[self.result.code != value]
-        if dropFlag:
-            self.dropRacer = list()
         temp = {col: racerInput[col].tolist() for col in racerInput.columns}
         for tempKey, value in temp.items():
             temp[tempKey] = str(temp[tempKey]).strip('[]').strip('\'')
         temp['totalTimeCost'] = self.timeCostDict[key]
         temp['timeGap'] = ''
-        self.renewOrder = self.findPosition(temp) 
+        self.renewOrder = self.findPosition(temp)
         emptyFlag = True
         for i, resultKey in enumerate(self.result['code'].tolist()):
             if key == resultKey:
@@ -156,13 +152,15 @@ class Race(object):
                 nextLap = self.raceData[self.raceData['lap'].isin([self.lapDict[key]+1])]
                 nextLap = nextLap.reset_index(drop=True)
                 if key in set(nextLap['code']):
-                    if key == 'HAM':
+                    if key in self.fastDriversList:
                         if (self.lapDict[key] - self.lastPitDict[key] == 0):
-                            self.timeCostDict[key] += self.raceData[(self.raceData['code'] == key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1)].iloc[0,5]
+                            outLapTime = self.raceData[(self.raceData['code'] == key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1)].iloc[0,5]
+                            self.timeCostDict[key] += outLapTime
+                            self.driverNextLapTimeDict[key] = outLapTime
                             self.lapDict[key] += 1                                  
                         elif self.lapDict[key] == 1:
-                            self.driverNextLapTimeDict[key] = int(HamLTG.virtualSafetyCar(int(HamLTG.lapTimeUsedMedium(2)),45000))
-                            self.raceData.loc[(self.raceData['code']== 'HAM') & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
+                            self.driverNextLapTimeDict[key] = int(HamLTG.virtualSafetyCar(int(HamLTG.lapTimeUsedMedium(2,key)),key))
+                            self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
                             self.timeCostDict[key] += self.driverNextLapTimeDict[key]
                             self.lapDict[key] += 1                                                       
                         else:
@@ -170,23 +168,23 @@ class Race(object):
                             currentTyre = str(re.search(r'^[a-zA-Z]*\s*[a-zA-Z]*',str(driverTyreInfo.iloc[0,2+self.pitTimesDict[key]])).group())
                             currentTyre = currentTyre.strip()
                             if currentTyre == 'Used medium':
-                                self.driverNextLapTimeDict[key] = int(HamLTG.lapTimeUsedMedium(self.lapDict[key]-self.lastPitDict[key]+1))
-                                self.raceData.loc[(self.raceData['code']== 'HAM') & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
+                                self.driverNextLapTimeDict[key] = int(HamLTG.lapTimeUsedMedium(self.lapDict[key]-self.lastPitDict[key]+1,key))
+                                self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
                                 self.timeCostDict[key] += self.driverNextLapTimeDict[key]
                                 self.lapDict[key] += 1
                             elif currentTyre == 'Soft': 
-                                self.driverNextLapTimeDict[key] = int(HamLTG.lapTimeNewSoft(self.lapDict[key]-self.lastPitDict[key]+1))
-                                self.raceData.loc[(self.raceData['code']== 'HAM') & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
+                                self.driverNextLapTimeDict[key] = int(HamLTG.lapTimeNewSoft(self.lapDict[key]-self.lastPitDict[key]+1,key))
+                                self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
                                 self.timeCostDict[key] += self.driverNextLapTimeDict[key]
                                 self.lapDict[key] += 1
                             elif currentTyre == 'Medium':
-                                self.driverNextLapTimeDict[key] = int(HamLTG.lapTimeNewMedium(self.lapDict[key]-self.lastPitDict[key]+1))
-                                self.raceData.loc[(self.raceData['code']== 'HAM') & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
+                                self.driverNextLapTimeDict[key] = int(HamLTG.lapTimeNewMedium(self.lapDict[key]-self.lastPitDict[key]+1,key))
+                                self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
                                 self.timeCostDict[key] += self.driverNextLapTimeDict[key]
                                 self.lapDict[key] += 1
                             elif currentTyre == 'Hard':
-                                self.driverNextLapTimeDict[key] = int(HamLTG.lapTimeNewHard(self.lapDict[key]-self.lastPitDict[key]+1))
-                                self.raceData.loc[(self.raceData['code']== 'HAM') & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
+                                self.driverNextLapTimeDict[key] = int(HamLTG.lapTimeNewHard(self.lapDict[key]-self.lastPitDict[key]+1,key))
+                                self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
                                 self.timeCostDict[key] += self.driverNextLapTimeDict[key]
                                 self.lapDict[key] += 1
                     else:
@@ -204,12 +202,12 @@ class Race(object):
                     tempNameList.append(racer)
                 del self.timeCostDict[racer]
                 del self.lapDict[racer]
-            for value in tempNameList:
-                self.dropRacer.remove(value)
+            self.dropRacer = list()
+
         if sortFlag:
             self.timeCostDict = dict(sorted(self.timeCostDict.items(), key=lambda x: x[1]))
         if not self.endFlag:
-            self.currentTime += 100
+            self.currentTime += 1000
             self.timer = threading.Timer(0.0001, self.fun_timer,args=(self.event,))
             self.timer.start()
         else:
@@ -228,10 +226,10 @@ class Race(object):
         changePosition = str('stint'+ str(int(2+self.pitTimesDict['HAM'])))
         replaceString = tyreType + " (56)"
         tyreChoice.loc[(tyreChoice['code']== 'HAM') & (tyreChoice['raceId']==self.raceId), changePosition] =  replaceString
-        pitInTime  = HamLTG.pitTimeGenerate(self.driverNextLapTimeDict['HAM'],tyreType,'in')
+        pitInTime  = HamLTG.pitTimeGenerate(self.driverNextLapTimeDict['HAM'],tyreType,'in','HAM')
         self.timeCostDict['HAM'] += (pitInTime-self.driverNextLapTimeDict['HAM'])
         self.driverNextLapTimeDict['HAM'] = pitInTime              
-        pitOutTime  = HamLTG.pitTimeGenerate(self.driverNextLapTimeDict['HAM'],tyreType,'out')
+        pitOutTime  = HamLTG.pitTimeGenerate(self.driverNextLapTimeDict['HAM'],tyreType,'out','HAM')
         self.raceData.loc[(self.raceData['code']== 'HAM') & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict['HAM']), 'milliseconds'] =  pitInTime
         self.raceData.loc[(self.raceData['code']== 'HAM') & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict['HAM']+1), 'milliseconds'] =  pitOutTime
         self.event.set()
@@ -294,16 +292,17 @@ class Race(object):
         self.pitTimesDict = dict(zip(self.codeTuple,self.lastPitLapTuple))
         self.driverLastLapTimeDict = dict(zip(self.codeTuple,self.lastPitLapTuple))
         self.driverNextLapTimeDict = dict(zip(self.codeTuple,self.lastPitLapTuple))
+        self.fastDriversList = ["HAM","BOT","LEC","VET"]
         
         firstLap = self.raceData[self.raceData['lap'].isin([1])]
         firstLap = firstLap.reset_index(drop=True)
         for i in range(len(set(firstLap['code']))):
-            if firstLap['code'][i] == "HAM":
-                currentLapTime = int(HamLTG.startOff(int(HamLTG.lapTimeUsedMedium(2))))
+            if firstLap['code'][i] in self.fastDriversList:
+                currentLapTime = int(HamLTG.startOff(int(HamLTG.lapTimeUsedMedium(2,firstLap['code'][i])),firstLap['code'][i]))
                 self.timeCostDict[firstLap['code'][i]] = currentLapTime
                 self.driverLastLapTimeDict[firstLap['code'][i]] = currentLapTime
                 self.driverNextLapTimeDict[firstLap['code'][i]] = currentLapTime
-                self.raceData.loc[(self.raceData['code']== 'HAM') & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict['HAM']), 'milliseconds'] =  currentLapTime
+                self.raceData.loc[(self.raceData['code']== firstLap['code'][i]) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[firstLap['code'][i]]), 'milliseconds'] =  currentLapTime
                 continue
             for key,value in self.timeCostDict.items():
                 if key == firstLap['code'][i]:
@@ -322,5 +321,3 @@ def main():
     
 if __name__ == '__main__':
     main()
-    
-
