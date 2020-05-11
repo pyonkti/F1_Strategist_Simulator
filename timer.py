@@ -126,8 +126,6 @@ class Race(object):
             self.result.loc[self.renewOrder] = temp
         gapTimeStamp = int(temp['totalTimeCost']) - int(self.result.iloc[0,6])
         gapTimeStamp /= 1000
-        if(gapTimeStamp < 0):
-            gapTimeStamp = 0
         timearr = datetime.fromtimestamp(gapTimeStamp)
         otherStyleTime = datetime.strftime(timearr,"%M:%S.%f")[:-3]
         timeGap = str("+"+otherStyleTime)
@@ -138,8 +136,10 @@ class Race(object):
         if self.pauseFlag:
             event.wait()
         dropFlag = False
+        sortFlag = False
         for key,value in self.timeCostDict.items():
             if (self.currentTime >= value):
+                sortFlag = True
                 thisLap = self.raceData[self.raceData['lap'].isin([self.lapDict[key]])]
                 thisLap = thisLap.reset_index(drop=True)
                 if self.renewOrder == 0:
@@ -206,6 +206,8 @@ class Race(object):
                 del self.lapDict[racer]
             for value in tempNameList:
                 self.dropRacer.remove(value)
+        if sortFlag:
+            self.timeCostDict = dict(sorted(self.timeCostDict.items(), key=lambda x: x[1]))
         if not self.endFlag:
             self.currentTime += 100
             self.timer = threading.Timer(0.0001, self.fun_timer,args=(self.event,))
@@ -308,6 +310,7 @@ class Race(object):
                     currentLapTime = firstLap.iloc[i,5]
                     self.timeCostDict[key] = currentLapTime
                     self.driverLastLapTimeDict[key] = currentLapTime
+        self.timeCostDict = dict(sorted(self.timeCostDict.items(), key=lambda x: x[1]))
         with keyboard.Listener(on_press=self.on_press,on_release=self.on_release) as listener:
             print("You can now give instructions to Lewis Hamilton(HAM) by pressing \"P\" at any time.")
             print("The race is about to Start. Press \"ENTER\" to launch. Press \"Q\" at any time to quit")
