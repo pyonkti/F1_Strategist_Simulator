@@ -6,7 +6,8 @@ Created on Thu Mar 19 18:54:32 2020
 
 """
 
-import HamLapTimeGenerator as HamLTG
+import fastTeamLapTimeGenerator as hamLTG
+import overtake as otkCalculator
 import threading
 import pandas as pd
 import re
@@ -159,34 +160,33 @@ class Race(object):
                             self.driverNextLapTimeDict[key] = outLapTime
                             self.lapDict[key] += 1                                  
                         elif self.lapDict[key] == 1:
-                            self.driverNextLapTimeDict[key] = int(HamLTG.virtualSafetyCar(int(HamLTG.lapTimeUsedMedium(2,key)),key))
+                            if key == "GAS":
+                                self.driverNextLapTimeDict[key] = int(hamLTG.virtualSafetyCar(int(hamLTG.lapTimeUsedSoft(2,key)),key))
+                            else:
+                                self.driverNextLapTimeDict[key] = int(hamLTG.virtualSafetyCar(int(hamLTG.lapTimeUsedMedium(2,key)),key))
                             self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
                             self.timeCostDict[key] += self.driverNextLapTimeDict[key]
                             self.lapDict[key] += 1                                                       
                         else:
                             driverTyreInfo = tyreChoice[tyreChoice['raceId'].isin([self.raceId]) & tyreChoice['code'].isin([key])]
                             currentTyre = str(re.search(r'^[a-zA-Z]*\s*[a-zA-Z]*',str(driverTyreInfo.iloc[0,2+self.pitTimesDict[key]])).group())
+                            expectedLapsOnTyre = int(re.search(r'\d+',str(driverTyreInfo.iloc[0,2+self.pitTimesDict[key]])).group())
                             currentTyre = currentTyre.strip()
                             if currentTyre == 'Used medium':
-                                self.driverNextLapTimeDict[key] = int(HamLTG.lapTimeUsedMedium(self.lapDict[key]-self.lastPitDict[key]+1,key))
-                                self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
-                                self.timeCostDict[key] += self.driverNextLapTimeDict[key]
-                                self.lapDict[key] += 1
+                                self.driverNextLapTimeDict[key] = int(hamLTG.lapTimeUsedMedium(self.lapDict[key]-self.lastPitDict[key]+1,key))
+                            elif currentTyre == 'Used soft':
+                                self.driverNextLapTimeDict[key] = int(hamLTG.lapTimeUsedSoft(self.lapDict[key]-self.lastPitDict[key]+1,key))
                             elif currentTyre == 'Soft': 
-                                self.driverNextLapTimeDict[key] = int(HamLTG.lapTimeNewSoft(self.lapDict[key]-self.lastPitDict[key]+1,key))
-                                self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
-                                self.timeCostDict[key] += self.driverNextLapTimeDict[key]
-                                self.lapDict[key] += 1
+                                self.driverNextLapTimeDict[key] = int(hamLTG.lapTimeNewSoft(self.lapDict[key]-self.lastPitDict[key]+1,key))
                             elif currentTyre == 'Medium':
-                                self.driverNextLapTimeDict[key] = int(HamLTG.lapTimeNewMedium(self.lapDict[key]-self.lastPitDict[key]+1,key))
-                                self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
-                                self.timeCostDict[key] += self.driverNextLapTimeDict[key]
-                                self.lapDict[key] += 1
+                                self.driverNextLapTimeDict[key] = int(hamLTG.lapTimeNewMedium(self.lapDict[key]-self.lastPitDict[key]+1,key))
                             elif currentTyre == 'Hard':
-                                self.driverNextLapTimeDict[key] = int(HamLTG.lapTimeNewHard(self.lapDict[key]-self.lastPitDict[key]+1,key))
-                                self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
-                                self.timeCostDict[key] += self.driverNextLapTimeDict[key]
-                                self.lapDict[key] += 1
+                                self.driverNextLapTimeDict[key] = int(hamLTG.lapTimeNewHard(self.lapDict[key]-self.lastPitDict[key]+1,key))
+                            if self.lapDict[key]-self.lastPitDict[key] == expectedLapsOnTyre-1:
+                                 self.driverNextLapTimeDict[key] = int(hamLTG.pitTimeGenerate(self.driverNextLapTimeDict[key],'','in',key))
+                            self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict[key]+1), 'milliseconds'] =  self.driverNextLapTimeDict[key]
+                            self.timeCostDict[key] += self.driverNextLapTimeDict[key]
+                            self.lapDict[key] += 1
                     else:
                         self.driverNextLapTimeDict[key] = nextLap[nextLap['code'] == key].iloc[0,5]
                         self.timeCostDict[key] += nextLap[nextLap['code'] == key].iloc[0,5]
@@ -226,10 +226,10 @@ class Race(object):
         changePosition = str('stint'+ str(int(2+self.pitTimesDict['HAM'])))
         replaceString = tyreType + " (56)"
         tyreChoice.loc[(tyreChoice['code']== 'HAM') & (tyreChoice['raceId']==self.raceId), changePosition] =  replaceString
-        pitInTime  = HamLTG.pitTimeGenerate(self.driverNextLapTimeDict['HAM'],tyreType,'in','HAM')
+        pitInTime  = hamLTG.pitTimeGenerate(self.driverNextLapTimeDict['HAM'],tyreType,'in','HAM')
         self.timeCostDict['HAM'] += (pitInTime-self.driverNextLapTimeDict['HAM'])
         self.driverNextLapTimeDict['HAM'] = pitInTime              
-        pitOutTime  = HamLTG.pitTimeGenerate(self.driverNextLapTimeDict['HAM'],tyreType,'out','HAM')
+        pitOutTime  = hamLTG.pitTimeGenerate(self.driverNextLapTimeDict['HAM'],tyreType,'out','HAM')
         self.raceData.loc[(self.raceData['code']== 'HAM') & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict['HAM']), 'milliseconds'] =  pitInTime
         self.raceData.loc[(self.raceData['code']== 'HAM') & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lapDict['HAM']+1), 'milliseconds'] =  pitOutTime
         self.event.set()
@@ -292,13 +292,16 @@ class Race(object):
         self.pitTimesDict = dict(zip(self.codeTuple,self.lastPitLapTuple))
         self.driverLastLapTimeDict = dict(zip(self.codeTuple,self.lastPitLapTuple))
         self.driverNextLapTimeDict = dict(zip(self.codeTuple,self.lastPitLapTuple))
-        self.fastDriversList = ["HAM","BOT","LEC","VET"]
+        self.fastDriversList = ["HAM","BOT","LEC","VET","VER","GAS"]
         
         firstLap = self.raceData[self.raceData['lap'].isin([1])]
         firstLap = firstLap.reset_index(drop=True)
         for i in range(len(set(firstLap['code']))):
             if firstLap['code'][i] in self.fastDriversList:
-                currentLapTime = int(HamLTG.startOff(int(HamLTG.lapTimeUsedMedium(2,firstLap['code'][i])),firstLap['code'][i]))
+                if firstLap['code'][i] == "GAS":
+                    currentLapTime = int(hamLTG.startOff(int(hamLTG.lapTimeUsedSoft(2,firstLap['code'][i])),firstLap['code'][i]))
+                else:
+                    currentLapTime = int(hamLTG.startOff(int(hamLTG.lapTimeUsedMedium(2,firstLap['code'][i])),firstLap['code'][i]))
                 self.timeCostDict[firstLap['code'][i]] = currentLapTime
                 self.driverLastLapTimeDict[firstLap['code'][i]] = currentLapTime
                 self.driverNextLapTimeDict[firstLap['code'][i]] = currentLapTime

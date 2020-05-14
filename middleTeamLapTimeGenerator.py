@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Apr 30 00:14:26 2020
+Created on Tue May 12 13:29:43 2020
 
 @author: Billy
 """
@@ -9,14 +9,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 
-newSoftReferenceDict = {"HAM": 97300, "BOT": 97360, "LEC": 97170, "VET": 97370}
-newMediumReferenceDict = {"HAM": 97300,"BOT": 97360, "LEC": 97170, "VET": 97370}
-usedMediumReferenceDict = {"HAM": 99550, "BOT": 99760, "LEC": 100410, "VET": 100205}
-newHardReferenceDict = {"HAM": 98000, "BOT": 98235, "LEC": 98300, "VET": 98385}
+newSoftReferenceDict = {"HAM": 97300, "BOT": 97360, "LEC": 97170, "VET": 97370, "VER": 97620}
+newMediumReferenceDict = {"HAM": 97300,"BOT": 97360, "LEC": 97170, "VET": 97370, "VER": 97620}
+usedMediumReferenceDict = {"HAM": 99550, "BOT": 99760, "LEC": 100410, "VET": 100205, "VER": 100340}
+newHardReferenceDict = {"HAM": 98000, "BOT": 98235, "LEC": 98300, "VET": 98385, "VER": 98883}
 
-startOffFactorDict = {"HAM": 1.085, "BOT": 1.10, "LEC": 1.116, "VET": 1.123}
+startOffFactorDict = {"HAM": 1.085, "BOT": 1.10, "LEC": 1.116, "VET": 1.123, "VER": 1.136, "GAS": 1.143}
 
-vscAffectedTimeDict = {"HAM": 45000, "BOT": 43016, "LEC": 41346, "VET": 40674}
+vscAffectedTimeDict = {"HAM": 45000, "BOT": 43016, "LEC": 41346, "VET": 40674, "VER": 38663, "GAS": 37285}
+
+pitLaneTimeDict = {"HAM": 23130, "BOT": 23130, "LEC": 23053, "VET": 23053, "VER": 22605, "GAS": 22605}
+
+
+xGasSoftUsed = [0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,20,25,30]
+xGasSoftUsed = np.array(xGasSoftUsed)
+yGasSoftUsed = [0,1059,1952,3112,4022,5031,6105,7258,8418,9426,10137,11019,11994,12951,13800,14666,15129,15000,9000,-8000]
+yGasSoftUsed = np.array(yGasSoftUsed)
+
+x2 = np.linspace(0, 40, 20)
+p = np.polyfit(xGasSoftUsed , yGasSoftUsed , 4) 
+yvals = p[0]*x2**4 + p[1]*x2**3 + p[2]*x2**2 + p[3]*x2 + p[4]  
+plt.plot(x2, yvals, 'k', label='used medium')
+plt.scatter(xGasSoftUsed ,yGasSoftUsed)
+plt.show()
+
+sum1 = 0
+for i in range(1,57):
+    sum1 += 100880-(4*p[0]*i**3 + 3*p[1]*i**2 + 2*p[2]*i + p[3])
+print(sum1)
 
 xHamMediumNew = [0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30]
 xHamMediumNew = np.array(xHamMediumNew)
@@ -25,8 +45,19 @@ yHamMediumNew = np.array(yHamMediumNew)
 
 xHamMediumUsed = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30]
 xHamMediumUsed = np.array(xHamMediumUsed)
-yHamMediumUsed = [0,381,1409,2458,3484,4623,5877,7162,8118,9340,10280,11025,11972,12539,13133,13674,14079,14641,14895,15067,15100,11000,2000]
+yHamMediumUsed = [0,381,1409,2458,3484,4623,5877,7162,8118,9340,10280,11025,11972,12539,13133,13674,14079,14641,14895,15067,15100,10000,-3000]
 yHamMediumUsed = np.array(yHamMediumUsed)
+
+p = np.polyfit(xHamMediumUsed, yHamMediumUsed, 4) 
+yvals = p[0]*x2**4 + p[1]*x2**3 + p[2]*x2**2 + p[3]*x2 + p[4]  
+plt.plot(x2, yvals, 'k', label='used medium')
+plt.scatter(xHamMediumUsed ,yHamMediumUsed)
+plt.show()
+
+sum2 = 0
+for i in range(1,57):
+    sum2 += 100880-(4*p[0]*i**3 + 3*p[1]*i**2 + 2*p[2]*i + p[3])
+print(sum2)
 
 xHamHardNew = [0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37]
 xHamHardNew = np.array(xHamHardNew)
@@ -116,7 +147,7 @@ def pitTimeGenerate(lastLapTime, newTyre, condition, key):
         pitInTime = lastLapTime + lastLapTime * 0.045 + 100 * random.normalvariate(0, 0.618)
         return int(pitInTime)
     if condition == 'out':
-        laneTime = 22544 + 1500 * random.normalvariate(0, 0.618)
+        laneTime = pitLaneTimeDict[key] + 1500 * random.normalvariate(0, 0.618)
         if newTyre == "Soft":
             pitOuTtime = lapTimeNewSoft(2,key) * 0.97 + 100 * random.normalvariate(0, 1)
         if newTyre == "Medium":
@@ -131,45 +162,3 @@ def startOff(laptime,key):
 def virtualSafetyCar(expectedLaptime,key):
     factor = 127700/expectedLaptime #according to the rules of Virtual Safety Car, the gap of all cars would be maintained by following a reference lap which is roughly 30% slower than the leader.
     return expectedLaptime-vscAffectedTimeDict[key]/factor + vscAffectedTimeDict[key] + 100 * random.normalvariate(0, 1)
-    
-"""    
-def oneStop():
-    timeConsumption = 0
-    firstLap = startOff(lapTimeUsedMedium(2)) + 200 * random.normalvariate(0, 1)
-    secondLap = virtualSafetyCar(lapTimeUsedMedium(2),45000) + 200 * random.normalvariate(0, 1)
-    timeConsumption += firstLap
-    timeConsumption += secondLap
-    for i in range(3,23):
-        timeConsumption += lapTimeUsedMedium(i)
-    timeConsumption += pitTimeGenerate(lapTimeUsedMedium(22), "hard", "in")
-    timeConsumption += pitTimeGenerate(lapTimeUsedMedium(22), "hard", "out")
-    for i in range(2,34):
-        timeConsumption += lapTimeNewHard(i)
-    print(timeConsumption)
-
-def twoStop():
-    timeConsumption = 0
-    firstLap = startOff(lapTimeUsedMedium(2)) + 100 * random.normalvariate(0, 1)
-    secondLap = virtualSafetyCar(lapTimeUsedMedium(2),45000)
-    timeConsumption += firstLap
-    timeConsumption += secondLap
-    for i in range(3,14):
-        timeConsumption += lapTimeUsedMedium(i)
-    timeConsumption += pitTimeGenerate(lapTimeUsedMedium(13), "hard", "in")
-    timeConsumption += pitTimeGenerate(lapTimeUsedMedium(13), "hard", "out")    
-    for i in range(2,23):
-        timeConsumption += lapTimeNewHard(i)
-    timeConsumption += pitTimeGenerate(lapTimeNewHard(22), "medium", "in")
-    timeConsumption += pitTimeGenerate(lapTimeNewHard(22), "medium", "out")   
-    for i in range(2,20):
-        timeConsumption += lapTimeNewMedium(i)
-    print(timeConsumption)
-
-  
-def main():
-    oneStop()
-    twoStop()
-    
-if __name__ == '__main__':
-    main()
-"""

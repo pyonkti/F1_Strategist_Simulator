@@ -57,14 +57,14 @@ def timeGap(currentLap,inputDataFrame,timeCostDict):
                 timeGapList.append(timeStamp)
     return timeGapList
 
-def allGap(timeGapList):
+def allGap(timeGapList,lapTimeList):
     for i in range(len(timeGapList)-1):
-        if timeGapList[i+1]-timeGapList[i]<2000:
+        if (timeGapList[i+1]-timeGapList[i] < 1000) & (lapTimeList[i]-lapTimeList[i+1] > 0) & (lapTimeList[i]-lapTimeList[i+1] < 2000) :
             allGapList.append(timeGapList[i+1]-timeGapList[i])
             
-def allAdv(lapTimeList):
+def allAdv(lapTimeList,timeGapList):
     for i in range(len(lapTimeList)-1):
-        if lapTimeList[i]-lapTimeList[i+1] < 2000 and lapTimeList[i]-lapTimeList[i+1] > 0:
+        if (lapTimeList[i]-lapTimeList[i+1] < 2000) & (lapTimeList[i]-lapTimeList[i+1] > 0) & (timeGapList[i+1]-timeGapList[i] < 1000):
             allAdvList.append(lapTimeList[i]-lapTimeList[i+1])
     
 
@@ -95,10 +95,11 @@ def getResult(raceId):
         lapResult = lapResult.reset_index(drop=True)
         if i == 1:
             lastOrder = tuple(lapResult['code'])
-            lastTimeGapList = timeGap(i,lapResult,timeCostDict)
             lastLapTimeList = lastLapTime(lapResult,lastLapDict)
+            lastTimeGapList = timeGap(i,lapResult,timeCostDict)
             tempTyreConditionList = tyreCondition(i,lapResult,lastPitDict,pitTimesDict)
-            allGap(lastTimeGapList)
+            allGap(lastTimeGapList,lapResult['milliseconds'])
+            allAdv(lapResult['milliseconds'],lastTimeGapList)
             continue
         else:
             thisTyreConditionList = tyreCondition(i,lapResult,lastPitDict,pitTimesDict)
@@ -117,20 +118,20 @@ def getResult(raceId):
                             else:
                                 costOfOvertakeList.append(tempTimeList[cPosition]- lastLapTimeList[lPosition])
                                 costOfBeOvertakenList.append(tempTimeList[tempCodeList.index(lastOrder[lPosition-1])]- lastLapTimeList[lPosition-1])
-        lastTimeGapList = timeGap(i,lapResult,timeCostDict)
         lastLapTimeList = lastLapTime(lapResult,lastLapDict)
+        lastTimeGapList = timeGap(i,lapResult,timeCostDict)
         tempTyreConditionList = thisTyreConditionList  
-        allGap(lastTimeGapList)
-        allAdv(lapResult['milliseconds'])         
+        allGap(lastTimeGapList,lapResult['milliseconds'])
+        allAdv(lapResult['milliseconds'],lastTimeGapList)         
         lastOrder = tuple(lapResult['code'])
     data = np.array(overtakeList) 
-    bins = np.linspace(0, 2000, num=20, endpoint=True, retstep=False, dtype=None)
+    bins = np.linspace(0, 1000, num=20, endpoint=True, retstep=False, dtype=None)
     countOvertakeGap,bins = np.histogram(data, bins)
     data = np.array(allGapList) 
     countGap,bins = np.histogram(data, bins)   
     possibilityOnGapList = np.array(countOvertakeGap) / np.array(countGap)
     plt.title("F1 Shanghai: Overtake possibility distribution in relation to the gap between drivers from 2012 to "+raceDict[raceId]) 
-    x = np.arange(0, 1900, 100).tolist()
+    x = np.arange(50, 1000, 50).tolist()
     y = possibilityOnGapList
     plt.plot(x, y, 'ro-')
     plt.xlabel('milliseconds (gap) with width of 100ms')
@@ -156,7 +157,14 @@ def getResult(raceId):
     
     data = np.array(costOfOvertakeList) 
     bins = np.linspace(-1000, 2000, num=30, endpoint=True, retstep=False, dtype=None)
-    plt.hist(data, bins) 
+    countOvertakeCost,bins = np.histogram(data, bins)
+    data = np.true_divide(countOvertakeCost, len(overtakeList))
+    sumData = list()
+    for i in range(0,len(data)):
+        sumData.append(sum(data[0:i+1]))
+    print(sumData)
+    x = np.arange(-900, 2000, 100).tolist()
+    plt.scatter(x, sumData) 
     plt.title("F1 Shanghai: Time cost of Overtaking from 2012 to "+raceDict[raceId]) 
     plt.xlabel('milliseconds')
     plt.ylabel('numbers')
@@ -165,7 +173,14 @@ def getResult(raceId):
     plt.show()
     
     data = np.array(costOfBeOvertakenList) 
-    plt.hist(data, bins) 
+    countBeOvertakeCost,bins = np.histogram(data, bins)
+    data = np.true_divide(countBeOvertakeCost, len(overtakeList))
+    sumData = list()
+    for i in range(0,len(data)):
+        sumData.append(sum(data[0:i+1]))
+    print(sumData)
+    x = np.arange(-900, 2000, 100).tolist()
+    plt.scatter(x, sumData) 
     plt.title("F1 Shanghai: Time cost of being Overtook from 2012 to "+raceDict[raceId]) 
     plt.xlabel('milliseconds')
     plt.ylabel('numbers')
