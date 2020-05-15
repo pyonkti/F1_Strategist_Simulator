@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Mar 19 18:54:32 2020
+Created on Fri May 15 23:59:39 2020
 
 @author: Billy
-
 """
 
 import fastTeamLapTimeGenerator as hamLTG
@@ -75,13 +74,6 @@ class Race(object):
                     allTyreChoice = str(int(inputDataFrame.iloc[0,2])-self.lastPitDict[key])+" "+currentTyre 
         return allTyreChoice  
     
-    def timeTransformer(self,inputTime):
-        inputTime /= 1000
-        timearr = datetime.fromtimestamp(inputTime)
-        otherStyleTime = datetime.strftime(timearr,"%M:%S.%f")[:-3]
-        outputTime = str(otherStyleTime)
-        return outputTime
-        
     def output(self,racerInput,key):
         temp = {col: racerInput[col].tolist() for col in racerInput.columns}
         for tempKey, value in temp.items():
@@ -106,7 +98,12 @@ class Race(object):
                     temp['selfComparison']='\033[32m'+'-'+ otherStyleTime  +'\033[0m'
                 else:
                     temp['selfComparison']='\033[31m'+'+'+ otherStyleTime  +'\033[0m'
-                temp['time'] = str(self.timeTransformer(int(temp['milliseconds'])))
+                timeStamp = int(temp['milliseconds'])
+                timeStamp /= 1000
+                timearr = datetime.fromtimestamp(timeStamp)
+                otherStyleTime = datetime.strftime(timearr,"%M:%S.%f")[:-3]
+                outputTime = str(otherStyleTime)
+                temp['time'] = outputTime
                 self.result = self.result[self.result.code != key]
                 df1 = self.result.loc[:self.renewOrder-1]
                 df2 = self.result.loc[self.renewOrder:]
