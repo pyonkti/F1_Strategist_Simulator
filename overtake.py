@@ -99,10 +99,9 @@ def funcAdv(x):
 
 def overtakeJudgement(gap,adv):
     overtakeResult = {"pursuer":0,"leader":0}  
-    if (gap < 1000) & (adv < 1250):
+    if adv < 1250:
         randomNumber = random.random()
         if (randomNumber <= funcGap(gap,aGap,bGap,cGap)):
-            print("succeeded!Overtake in 1 second with slow speed")
             randomNumber = random.uniform(0.3,0.71)
             timeCostofOvertaker = int(funcCostofOvertakeReverse(randomNumber,aCostOtking,bCostOtking,cCostOtking))
             randomNumber = random.uniform(0.047,0.86)
@@ -111,7 +110,6 @@ def overtakeJudgement(gap,adv):
             overtakeResult['leader'] = timeCostofLeader
             return(overtakeResult)
         else:
-            print("failed!Overtake in 1 second with slow speed")
             randomNumber = random.uniform(0.4,0.5)
             timeCostofOvertaker = int(funcCostofOvertakeReverse(randomNumber,aCostOtking,bCostOtking,cCostOtking))
             randomNumber = random.uniform(0.047,0.86)
@@ -122,13 +120,12 @@ def overtakeJudgement(gap,adv):
                 overtakeResult['pursuer'] = timeCostofLeader + adv-(gap-timeCostofOvertaker)  
             overtakeResult['leader'] = timeCostofLeader
             return(overtakeResult)
-    elif (gap < 1000) & (adv >= 1250):
+    elif adv >= 1250:
         gapFactor = funcGap(gap,aGap,bGap,cGap)
         advFactor = funcAdv(adv)
         randomNumber = random.random()
         if advFactor > gapFactor:         
             if (randomNumber <= advFactor):
-                print("succeeded!Overtake in 1 second with fast speed")
                 randomNumber = random.uniform(0.3,0.71)
                 timeCostofOvertaker = int(funcCostofOvertakeReverse(randomNumber,aCostOtking,bCostOtking,cCostOtking))
                 randomNumber = random.uniform(0.047,0.86)

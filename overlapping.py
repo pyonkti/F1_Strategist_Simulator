@@ -74,8 +74,6 @@ class Race(object):
                 if timeDelta > nextLaptimePursuer:
                     self.pursuerList.append(currentRacer)
                     self.headerList.append(key)
-                    #headerList.append(key)
-                    #lapList.append(self.result.iloc[tuple(self.result['code']).index(key),2])
                 
     def tyreCondition(self,inputDataFrame):
         allTyreChoice = str()
