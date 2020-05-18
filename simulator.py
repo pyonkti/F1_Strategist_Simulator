@@ -6,6 +6,7 @@ Created on Fri May 15 23:59:39 2020
 """
 import fastTeamLapTimeGenerator as hamLTG
 import overtake as otkCalculator
+import overlap as olpCalculator
 import threading
 import pandas as pd
 import re
@@ -39,9 +40,11 @@ class Race(object):
     driverNextLapTime = dict() 
     driverLastLapTime = dict()
     raceData = 0                                                                # Specific race data for one mathch
+    player = ''
     endFlag = False                                                             # Whether user called for quit or not
     pauseFlag = False                                                           # Whether user called pause or not
     raceEndFlag = False                                                         # Wheter the race is ended or not
+    finalResultFlag = False
     dropFlag = False
     sortFlag = False    
     lateInstructionFlag = False                                                 # Whether too late for giving instruction at this lap or not
@@ -58,7 +61,7 @@ class Race(object):
         """
         self.player = choosenDriver
         self.raceId = raceId
-        self.raceData = merged[merged['raceId'].isin([raceId])] 
+        self.raceData = merged[merged['raceId'].isin([self.raceId])] 
         self.raceData = self.raceData.reset_index(drop=True)
         self.codes = tuple(set(self.raceData['code']))
         self.lastPitLap = (0,)*len(self.codes)
@@ -70,11 +73,15 @@ class Race(object):
         self.driverLastLapTime = dict(zip(self.codes,self.lastPitLap))
         self.driverNextLapTime = dict(zip(self.codes,self.lastPitLap))
         self.fastDrivers = ["HAM","BOT","LEC","VET","VER","GAS"]
-        
-        if self.player == 'GAS':
-            tyreChoice.loc[(tyreChoice['code']== choosenDriver) & (tyreChoice['raceId']==self.raceId), 2] =  'Used soft (56)'
-        else:
-            tyreChoice.loc[(tyreChoice['code']== choosenDriver) & (tyreChoice['raceId']==self.raceId), 2] =  'Used medium (56)'
+        self.result.drop(self.result.index,inplace=True) 
+        self.dropRacer = list()
+        self.endFlag = False                                                             # Whether user called for quit or not
+        self.pauseFlag = False                                                           # Whether user called pause or not
+        self.raceEndFlag = False                                                         # Wheter the race is ended or not
+        self.finalResultFlag = False
+        self.dropFlag = False
+        self.sortFlag = False    
+        self.lateInstructionFlag = False
         
         """
         Preload first lap statistics before started
@@ -99,11 +106,7 @@ class Race(object):
                     self.timeCosts[key] = currentLapTime
                     self.driverLastLapTime[key] = currentLapTime  
         self.timeCosts = dict(sorted(self.timeCosts.items(), key=lambda x: x[1]))
-        with keyboard.Listener(on_press=self.on_press,on_release=self.on_release) as listener:
-            print("You can now give instructions to "+ self.player +" by pressing \"P\" at any time.")
-            print("The race is about to Start. Press \"ENTER\" to launch. Press \"Q\" at any time to quit")
-            print("Good Luck!")
-            listener.join()    
+        self.fun_timer()
         
     def output(self,racerInput,key):
         temp = {col: racerInput[col].tolist() for col in racerInput.columns}
@@ -151,8 +154,7 @@ class Race(object):
         timearr = datetime.fromtimestamp(gapTimeStamp)
         otherStyleTime = datetime.strftime(timearr,"%M:%S.%f")[:-3]
         timeGap = str("+"+otherStyleTime)
-        self.result.iloc[self.renewOrder,7] = timeGap   
-        print(self.result[['code','lap','time','milliseconds','timeGap','selfComparison','tyreCondition']])
+        self.result.iloc[self.renewOrder,7] = timeGap
         
     def findPosition(self,newestRecord):
         if len(self.result['lap']) == 0:
@@ -185,14 +187,14 @@ class Race(object):
         outputTime = str(otherStyleTime)
         return outputTime
         
-    def fun_timer(self,event):
-        if self.pauseFlag:
-            event.wait()
-        self.dropFlag = False
-        self.sortFlag = False
-        for key,value in self.timeCosts.items():
-            if (self.currentTime >= value):
-                self.sortFlag = True
+    def fun_timer(self):
+        while 1:
+            if self.finalResultFlag:
+                break
+            self.dropFlag = False
+            for key,value in self.timeCosts.items():
+                if any(formerValue < value for formerValue in list(self.timeCosts.values())):
+                    break
                 thisLap = self.raceData[self.raceData['lap'].isin([self.lap[key]])]
                 thisLap = thisLap.reset_index(drop=True)
                 if(self.lap[key] == 56):
@@ -200,30 +202,20 @@ class Race(object):
                 self.output(thisLap[thisLap['code'] == key], key)
                 self.endJudgement(key)
                 self.nextLap(key)
-        if self.dropFlag:
-            tempNameList = list()
-            for racer in self.dropRacer:
-                if(self.lap[racer] == 56):
-                    tempNameList.append(racer)
-                del self.timeCosts[racer]
-                del self.lap[racer]
+            if self.dropFlag:
+                for racer in self.dropRacer:
+                    del self.timeCosts[racer]
+                    del self.lap[racer]
             self.dropRacer = list()
-        if self.sortFlag:
             self.timeCosts = dict(sorted(self.timeCosts.items(), key=lambda x: x[1]))
-        if not self.endFlag:
-            self.currentTime += 1000
-            self.timer = threading.Timer(0.0001, self.fun_timer,args=(self.event,))
-            self.timer.start()
-        else:
-            self.timer.cancel()
             
     def endJudgement(self,key):
         if((key == self.player) & (self.raceEndFlag)):
             position = list(self.result['code']).index(self.player)+1
+            timeCost = self.timeCosts[self.player]
             print("The race ended. You are "+ str(position))
-            k = Controller()
-            k.press('q')
-            k.release('q')
+            print("Total time cost: "+str(timeCost))
+            self.finalResultFlag = True
             
     def nextLap(self,key):
         nextLap = self.raceData[self.raceData['lap'].isin([self.lap[key]+1])]
@@ -261,6 +253,7 @@ class Race(object):
                     if self.lap[key]-self.lastPit[key] == expectedLapsOnTyre-1:
                          self.driverNextLapTime[key] = int(hamLTG.pitTimeGenerate(self.driverNextLapTime[key],'','in',key))
                     self.overtake(key)
+                    self.overLap(key)
                     self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lap[key]+1), 'milliseconds'] =  self.driverNextLapTime[key]
                     self.timeCosts[key] += self.driverNextLapTime[key]
                     self.lap[key] += 1                       
@@ -277,87 +270,24 @@ class Race(object):
         leader = str(self.result.iloc[pursuerLoc-1,0])
         gap = int(self.result.iloc[pursuerLoc,6]-self.result.iloc[pursuerLoc-1,6])
         adv = int(self.driverNextLapTime[leader]-self.driverNextLapTime[key])  
-        if (adv-gap > 0) and gap < 1000 and not (self.lap[leader] == self.lastPit[leader] + 1) and not pursuerLoc == 0:
+        if not self.raceEndFlag and (adv-gap > 0) and (gap < 1000)  and not (self.lap[leader] == self.lastPit[leader] + 1) and not pursuerLoc == 0:
             overtakeCompensation = otkCalculator.overtakeJudgement(gap,adv)
             self.driverNextLapTime[key] += overtakeCompensation['pursuer']
             self.driverNextLapTime[leader] += overtakeCompensation['leader']
-            self.timeCosts[leader] += overtakeCompensation['leader']                         
-    
-    event = threading.Event()
-    timer = threading.Timer(0, fun_timer,args=(event,))
-    
-    def pitTimeGenerator(self,tyreType):
-        self.pauseFlag = False
-        driverTyreInfo = tyreChoice[tyreChoice['raceId'].isin([self.raceId]) & tyreChoice['code'].isin([self.player])]
-        expectedLapsOnTyre = self.lap[self.player]-self.lastPit[self.player]
-        currentTyre = re.search(r'^[a-zA-Z]*\s*[a-zA-Z]*',str(driverTyreInfo.iloc[0,2+self.pitTimes[self.player]])).group()
-        changePosition = str('stint'+ str(int(1+self.pitTimes[self.player])))
-        replaceString = currentTyre + " (" + str(expectedLapsOnTyre) +")"
-        tyreChoice.loc[(tyreChoice['code']== self.player) & (tyreChoice['raceId']==self.raceId), changePosition] =  replaceString
-        changePosition = str('stint'+ str(int(2+self.pitTimes[self.player])))
-        replaceString = tyreType + " (56)"
-        tyreChoice.loc[(tyreChoice['code']== self.player) & (tyreChoice['raceId']==self.raceId), changePosition] =  replaceString
-        pitInTime  = hamLTG.pitTimeGenerate(self.driverNextLapTime[self.player],tyreType,'in',self.player)
-        self.timeCosts[self.player] += (pitInTime-self.driverNextLapTime[self.player])
-        self.driverNextLapTime[self.player] = pitInTime              
-        pitOutTime  = hamLTG.pitTimeGenerate(self.driverNextLapTime[self.player],tyreType,'out',self.player)
-        self.raceData.loc[(self.raceData['code']== self.player) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lap[self.player]), 'milliseconds'] =  pitInTime
-        self.raceData.loc[(self.raceData['code']== self.player) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lap[self.player]+1), 'milliseconds'] =  pitOutTime
-        self.event.set()
-    
-    """
-    Keyboard Monitor
-    """       
-        
-    def on_press(self,key):
-        pass
-    
-    def on_release(self,key):
-        if key == Key.enter:
-            self.timer = threading.Timer(0, self.fun_timer, args =(self.event,))
-            self.timer.start()
-            if self.endFlag:
-                self.timer.cancel()
-            return True 
-        if key == Key.esc and self.pauseFlag:
-            self.pauseFlag = False
-            self.event.set()
-            return True    
-        if key == Key.esc and self.pauseFlag and self.lateInstructionFlag:
-            self.pauseFlag = False
-            self.lateInstructionFlag = False
-            self.event.set()
-            return True
-        if key.char is not None:
-            if key.char == '1' and self.pauseFlag:
-                self.pitTimeGenerator('Soft')
-                return True
-            elif key.char == '2' and self.pauseFlag:
-                self.pitTimeGenerator('Medium')
-                return True
-            elif key.char == '3' and self.pauseFlag:
-                self.pitTimeGenerator('Hard')
-                return True
-            if key.char == 'q':
-                self.endFlag = True
-                return False
-            if key.char == 'p':
-                self.event.clear()
-                if self.timeCosts[self.player] - self.currentTime <= 8000:
-                    self.pauseFlag = True
-                    self.lateInstructionFlag = True
-                    print("Too close to the pit lane, give instruction in the next lap please.")
-                    print("Press \"ESC\" to continue")
-                else :
-                    self.pauseFlag = True
-                    print("Press \"1\" for Soft,\"2\" for Medium, \"3\" for Hard. Press \"ESC\" to continue")
-                return True
-        else:
-            return True
-        
+            self.timeCosts[leader] += overtakeCompensation['leader']
+
+    def overLap(self,key):
+        currentRacerLoc = pd.Index(list(self.result['code'])).get_loc(key)
+        follower = list(self.result['code'])[currentRacerLoc+1:]
+        for followerKey,value in self.timeCosts.items():
+            if (followerKey in follower) and (value > self.timeCosts[key] + self.driverNextLapTime[key]):
+                overlapCompensation = olpCalculator.overlapJudgement()
+                self.driverNextLapTime[key] += overlapCompensation['fast']
+                if followerKey in self.fastDrivers:
+                    self.timeCosts[followerKey] += overlapCompensation['slow']
 
 def main():
-    race2019 = Race(1012,"GAS")    
-    
+    for i in range(10):
+        race2019 = Race(1012,"BOT")  
 if __name__ == '__main__':
     main()

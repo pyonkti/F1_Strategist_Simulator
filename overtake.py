@@ -134,7 +134,6 @@ def overtakeJudgement(gap,adv):
                 overtakeResult['leader'] = timeCostofLeader
                 return(overtakeResult)
             else:
-                print("failed!Overtake in 1 second with fast speed")
                 randomNumber = random.uniform(0.4,0.5)
                 timeCostofOvertaker = int(funcCostofOvertakeReverse(randomNumber,aCostOtking,bCostOtking,cCostOtking))
                 randomNumber = random.uniform(0.047,0.86)
@@ -147,7 +146,6 @@ def overtakeJudgement(gap,adv):
                 return(overtakeResult)
         else:
             if (randomNumber <= gapFactor):
-                print("succeeded!Overtake in 1 second with fast speed")
                 randomNumber = random.uniform(0.3,0.71)
                 timeCostofOvertaker = int(funcCostofOvertakeReverse(randomNumber,aCostOtking,bCostOtking,cCostOtking))
                 randomNumber = random.uniform(0.047,0.86)
@@ -156,7 +154,6 @@ def overtakeJudgement(gap,adv):
                 overtakeResult['leader'] = timeCostofLeader
                 return(overtakeResult)
             else:
-                print("failed!Overtake in 1 second with fast speed")
                 randomNumber = random.uniform(0.4,0.5)
                 timeCostofOvertaker = int(funcCostofOvertakeReverse(randomNumber,aCostOtking,bCostOtking,cCostOtking))
                 randomNumber = random.uniform(0.047,0.86)

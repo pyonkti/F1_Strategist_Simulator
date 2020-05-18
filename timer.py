@@ -73,12 +73,12 @@ class Race(object):
         self.driverLastLapTime = dict(zip(self.codes,self.lastPitLap))
         self.driverNextLapTime = dict(zip(self.codes,self.lastPitLap))
         self.fastDrivers = ["HAM","BOT","LEC","VET","VER","GAS"]
-        
+        """     
         if self.player == 'GAS':
-            tyreChoice.loc[(tyreChoice['code']== choosenDriver) & (tyreChoice['raceId']==self.raceId), 2] =  'Used soft (56)'
+            tyreChoice.loc[(tyreChoice['code']== self.player) & (tyreChoice['raceId']==self.raceId), 'stint1'] =  'Used soft (56)'
         else:
-            tyreChoice.loc[(tyreChoice['code']== choosenDriver) & (tyreChoice['raceId']==self.raceId), 2] =  'Used medium (56)'
-        
+            tyreChoice.loc[(tyreChoice['code']== self.player) & (tyreChoice['raceId']==self.raceId), 'stint1'] =  'Used medium (56)'
+        """     
         """
         Preload first lap statistics before started
         """
@@ -204,10 +204,7 @@ class Race(object):
                 self.endJudgement(key)
                 self.nextLap(key)
         if self.dropFlag:
-            tempNameList = list()
             for racer in self.dropRacer:
-                if(self.lap[racer] == 56):
-                    tempNameList.append(racer)
                 del self.timeCosts[racer]
                 del self.lap[racer]
             self.dropRacer = list()
@@ -371,7 +368,7 @@ class Race(object):
         
 
 def main():
-    race2019 = Race(1012,"GAS")    
+    race2019 = Race(1012,"BOT")    
     
 if __name__ == '__main__':
     main()
