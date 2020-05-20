@@ -130,6 +130,7 @@ def getResult(raceId):
     data = np.array(allGapList) 
     countGap,bins = np.histogram(data, bins)   
     possibilityOnGapList = np.array(countOvertakeGap) / np.array(countGap)
+    print(possibilityOnGapList)
     plt.title("F1 Shanghai: Overtake possibility distribution in relation to the gap between drivers from 2012 to "+raceDict[raceId]) 
     x = np.arange(50, 1000, 50).tolist()
     y = possibilityOnGapList
@@ -145,6 +146,7 @@ def getResult(raceId):
     data = np.array(allAdvList) 
     countAdv,bins = np.histogram(data, bins)   
     possibilityOnAdvList = np.array(countOvertakeAdv) / np.array(countAdv)
+    print(possibilityOnAdvList)
     plt.title("F1 Shanghai: Overtake possibility distribution in relation to the lap time advantage between drivers from 2012 to "+raceDict[raceId]) 
     x = np.arange(0, 1900, 100).tolist()
     y = possibilityOnAdvList
@@ -159,6 +161,7 @@ def getResult(raceId):
     bins = np.linspace(-1000, 2000, num=30, endpoint=True, retstep=False, dtype=None)
     countOvertakeCost,bins = np.histogram(data, bins)
     data = np.true_divide(countOvertakeCost, len(overtakeList))
+    print(data)
     sumData = list()
     for i in range(0,len(data)):
         sumData.append(sum(data[0:i+1]))
@@ -175,6 +178,7 @@ def getResult(raceId):
     data = np.array(costOfBeOvertakenList) 
     countBeOvertakeCost,bins = np.histogram(data, bins)
     data = np.true_divide(countBeOvertakeCost, len(overtakeList))
+    print(data)
     sumData = list()
     for i in range(0,len(data)):
         sumData.append(sum(data[0:i+1]))

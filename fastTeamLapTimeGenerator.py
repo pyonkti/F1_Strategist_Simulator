@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import random
 
 usedSoftReferenceDict = {"GAS": 100880}
-newSoftReferenceDict = {"HAM": 97300, "BOT": 97360, "LEC": 97170, "VET": 97370, "VER": 97620, "GAS":98180}
+newSoftReferenceDict = {"HAM": 96000, "BOT": 96060, "LEC": 95870, "VET": 96070, "VER": 96320, "GAS":96880}
 newMediumReferenceDict = {"HAM": 97300,"BOT": 97360, "LEC": 97170, "VET": 97370, "VER": 97620, "GAS":98180}
 usedMediumReferenceDict = {"HAM": 99550, "BOT": 99760, "LEC": 100410, "VET": 100205, "VER": 100340}
 newHardReferenceDict = {"HAM": 98000, "BOT": 98235, "LEC": 98300, "VET": 98385, "VER": 98883, "GAS": 99579}
@@ -23,12 +23,12 @@ pitLaneTimeDict = {"HAM": 23130, "BOT": 23130, "LEC": 23053, "VET": 23053, "VER"
 
 xHamMediumNew = [0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30]
 xHamMediumNew = np.array(xHamMediumNew)
-yHamMediumNew = [0,1051,2215,3292,4150,4867,5660,6170,6998,7631,8839,9398,10030,10680,10396,10607,10942,11776,12518,12991,10000,-1000]
+yHamMediumNew = [0,1251,2615,3892,4950,5867,6860,7570,8598,9431,10839,11598,12430,13280,13196,13607,14142,15176,16118,16791,12500,1000]
 yHamMediumNew = np.array(yHamMediumNew)
 
 xHamMediumUsed = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30]
 xHamMediumUsed = np.array(xHamMediumUsed)
-yHamMediumUsed = [0,381,1409,2458,3484,4623,5877,7162,8118,9340,10280,11025,11972,12539,13133,13674,14079,14641,14895,15067,15100,10000,-3000]
+yHamMediumUsed = [0,1431,2459,3508,4534,5673,6927,8212,9168,10390,11330,12075,13022,13589,14183,14724,15129,15691,15945,16117,16150,11050,-1950]
 yHamMediumUsed = np.array(yHamMediumUsed)
 
 xHamHardNew = [0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37]
@@ -138,7 +138,7 @@ def pitTimeGenerate(lastLapTime, newTyre, condition, key):
         pitInTime = lastLapTime + lastLapTime * 0.045 + 100 * random.normalvariate(0, 0.618)
         return int(pitInTime)
     if condition == 'out':
-        laneTime = pitLaneTimeDict[key] + 1500 * random.normalvariate(0, 0.618)
+        laneTime = pitLaneTimeDict[key] + 1000 * random.normalvariate(0, 0.618)
         if newTyre == "Soft":
             pitOuTtime = lapTimeNewSoft(2,key) * 0.97 + 100 * random.normalvariate(0, 1)
         if newTyre == "Medium":
@@ -153,38 +153,53 @@ def startOff(laptime,key):
 def virtualSafetyCar(expectedLaptime,key):
     factor = 127700/expectedLaptime #according to the rules of Virtual Safety Car, the gap of all cars would be maintained by following a reference lap which is roughly 30% slower than the leader.
     return expectedLaptime-vscAffectedTimeDict[key]/factor + vscAffectedTimeDict[key] + 100 * random.normalvariate(0, 1)
-    
-"""    
+      
 def oneStop():
     timeConsumption = 0
-    firstLap = startOff(lapTimeUsedMedium(2)) + 200 * random.normalvariate(0, 1)
-    secondLap = virtualSafetyCar(lapTimeUsedMedium(2),45000) + 200 * random.normalvariate(0, 1)
+    firstLap = startOff(lapTimeUsedMedium(2,"HAM"),"HAM") + 200 * random.normalvariate(0, 1)
+    secondLap = virtualSafetyCar(lapTimeUsedMedium(2,"HAM"),"HAM") + 200 * random.normalvariate(0, 1)
     timeConsumption += firstLap
     timeConsumption += secondLap
     for i in range(3,23):
-        timeConsumption += lapTimeUsedMedium(i)
-    timeConsumption += pitTimeGenerate(lapTimeUsedMedium(22), "hard", "in")
-    timeConsumption += pitTimeGenerate(lapTimeUsedMedium(22), "hard", "out")
+        timeConsumption += lapTimeUsedMedium(i,"HAM")
+    timeConsumption += pitTimeGenerate(lapTimeUsedMedium(22,"HAM"), "Hard", "in","HAM")
+    timeConsumption += pitTimeGenerate(lapTimeUsedMedium(22,"HAM"), "Hard", "out","HAM")
     for i in range(2,34):
-        timeConsumption += lapTimeNewHard(i)
+        timeConsumption += lapTimeNewHard(i,"HAM")
     print(timeConsumption)
 
 def twoStop():
     timeConsumption = 0
-    firstLap = startOff(lapTimeUsedMedium(2)) + 100 * random.normalvariate(0, 1)
-    secondLap = virtualSafetyCar(lapTimeUsedMedium(2),45000)
+    firstLap = startOff(lapTimeUsedMedium(2,"HAM"),"HAM") + 100 * random.normalvariate(0, 1)
+    print(int(firstLap))
+    secondLap = virtualSafetyCar(lapTimeUsedMedium(2,"HAM"),"HAM")
+    print(int(secondLap))
     timeConsumption += firstLap
     timeConsumption += secondLap
-    for i in range(3,14):
-        timeConsumption += lapTimeUsedMedium(i)
-    timeConsumption += pitTimeGenerate(lapTimeUsedMedium(13), "hard", "in")
-    timeConsumption += pitTimeGenerate(lapTimeUsedMedium(13), "hard", "out")    
-    for i in range(2,23):
-        timeConsumption += lapTimeNewHard(i)
-    timeConsumption += pitTimeGenerate(lapTimeNewHard(22), "medium", "in")
-    timeConsumption += pitTimeGenerate(lapTimeNewHard(22), "medium", "out")   
-    for i in range(2,20):
-        timeConsumption += lapTimeNewMedium(i)
+    for i in range(3,22):
+        temp = lapTimeUsedMedium(i,"HAM")
+        timeConsumption += temp 
+        print(int(temp))
+    temp = pitTimeGenerate(lapTimeUsedMedium(21,"HAM"), "Hard", "in","HAM")
+    print(int(temp))
+    timeConsumption += temp
+    temp = pitTimeGenerate(lapTimeUsedMedium(21,"HAM"), "Hard", "out","HAM")    
+    print(int(temp))
+    timeConsumption += temp
+    for i in range(2,14):
+        temp = lapTimeNewHard(i,"HAM")
+        print(int(temp))
+        timeConsumption += temp
+    temp = pitTimeGenerate(lapTimeNewHard(22,"HAM"), "Medium", "in","HAM")
+    print(int(temp))
+    timeConsumption += temp
+    temp = pitTimeGenerate(lapTimeNewHard(22,"HAM"), "Medium", "out","HAM")   
+    print(int(temp))
+    timeConsumption += temp   
+    for i in range(2,21):
+        temp = lapTimeNewMedium(i,"HAM")
+        timeConsumption += temp
+        print(int(temp))
     print(timeConsumption)
 
   
@@ -194,4 +209,3 @@ def main():
     
 if __name__ == '__main__':
     main()
-"""

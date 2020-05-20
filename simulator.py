@@ -288,6 +288,6 @@ class Race(object):
 
 def main():
     for i in range(10):
-        race2019 = Race(1012,"BOT")  
+        race2019 = Race(1012,"HAM")  
 if __name__ == '__main__':
     main()
