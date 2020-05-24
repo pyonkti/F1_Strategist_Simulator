@@ -10,6 +10,8 @@ import time
 import pandas as pd
 import re
 import sys
+from matplotlib import pyplot as plt 
+import numpy as np
 sys.setrecursionlimit(10000)
 from datetime import datetime
 
@@ -186,6 +188,7 @@ class Race(object):
             self.currentLap = 1
         else:
             self.currentLap = self.lapDict[tuple(self.result['code'])[0]]
+        self.timeCostDict = dict(sorted(self.timeCostDict.items(), key=lambda x: x[1]))
         self.currentTime += 100
         
         
@@ -201,6 +204,8 @@ class Race(object):
         self.lastPitDict = dict(zip(self.codeTuple,self.lastPitLapTuple))
         self.pitTimesDict = dict(zip(self.codeTuple,self.lastPitLapTuple))
         self.driverLastLapTimeDict = dict(zip(self.codeTuple,self.lastPitLapTuple))
+        self.renewOrder = 0
+        self.result.drop(self.result.index,inplace=True) 
         firstLap = self.raceData[self.raceData['lap'].isin([1])]
         firstLap = firstLap.reset_index(drop=True)
         for i in range(len(set(firstLap['code']))):
@@ -228,9 +233,35 @@ class Race(object):
 
 
 def main():
-    race2018 = Race(862) 
+    race2012 = Race(862)
+    race2013 = Race(882)
+    race2014 = Race(903)
+    race2015 = Race(928)
+    race2016 = Race(950)
+    race2017 = Race(970)
+    race2018 = Race(991)
+    
     print(overlapCostList)
     print(beOverlapCostList)
     
+    data = np.array(overlapCostList) 
+    bins = np.linspace(-1000, 2000, num=30, endpoint=True, retstep=False, dtype=None)
+    plt.hist(data, bins) 
+    plt.title("F1 Shanghai: Time cost of Overlapping from 2012 to 2018 ") 
+    plt.xlabel('milliseconds')
+    plt.ylabel('numbers')
+    fileName = str("F:/Programming/F1/Thesis/CostofOverlapping/CostofOverlapping.eps")
+    plt.savefig(fileName)
+    plt.show()
+    
+    data = np.array(beOverlapCostList) 
+    bins = np.linspace(-1000, 2000, num=30, endpoint=True, retstep=False, dtype=None)
+    plt.hist(data, bins) 
+    plt.title("F1 Shanghai: Time cost of being overlapped from 2012 to 2018 ") 
+    plt.xlabel('milliseconds')
+    plt.ylabel('numbers')
+    fileName = str("F:/Programming/F1/Thesis/CostofBeOverlapped/CostofBeOverlapping.eps")
+    plt.savefig(fileName)
+    plt.show()
 if __name__ == '__main__':
     main()

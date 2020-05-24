@@ -137,8 +137,8 @@ def getResult(raceId):
     plt.plot(x, y, 'ro-')
     plt.xlabel('milliseconds (gap) with width of 100ms')
     plt.ylabel('overtake possibility under the circumstance')
-    fileName = str("F:/Programming/thesis/GapPossibility/"+raceDict[raceId]+"gapOvertakePossibility.eps")
-    plt.savefig(fileName)
+    #fileName = str("F:/Programming/thesis/GapPossibility/"+raceDict[raceId]+"gapOvertakePossibility.eps")
+    #plt.savefig(fileName)
     plt.show()
     
     data = np.array(overtakeAdvList) 
@@ -153,8 +153,8 @@ def getResult(raceId):
     plt.plot(x, y, 'ro-')
     plt.xlabel('milliseconds (advantage) with width of 100ms')
     plt.ylabel('overtake possibility under the circumstance')
-    fileName = str("F:/Programming/thesis/LapTimeAdvPossibility/"+raceDict[raceId]+"lapTimeAdvOvertakePossibility.eps")
-    plt.savefig(fileName)
+    #fileName = str("F:/Programming/thesis/LapTimeAdvPossibility/"+raceDict[raceId]+"lapTimeAdvOvertakePossibility.eps")
+    #plt.savefig(fileName)
     plt.show()
     
     data = np.array(costOfOvertakeList) 
@@ -171,8 +171,8 @@ def getResult(raceId):
     plt.title("F1 Shanghai: Time cost of Overtaking from 2012 to "+raceDict[raceId]) 
     plt.xlabel('milliseconds')
     plt.ylabel('numbers')
-    fileName = str("F:/Programming/thesis/CostofOvertaking/"+raceDict[raceId]+"CostofOvertaking.eps")
-    plt.savefig(fileName)
+    #fileName = str("F:/Programming/thesis/CostofOvertaking/"+raceDict[raceId]+"CostofOvertaking.eps")
+    #plt.savefig(fileName)
     plt.show()
     
     data = np.array(costOfBeOvertakenList) 
@@ -188,8 +188,8 @@ def getResult(raceId):
     plt.title("F1 Shanghai: Time cost of being Overtook from 2012 to "+raceDict[raceId]) 
     plt.xlabel('milliseconds')
     plt.ylabel('numbers')
-    fileName = str("F:/Programming/thesis/CostofBeingOvertook/"+raceDict[raceId]+"CostofBeingOvertook.eps")
-    plt.savefig(fileName)
+    #fileName = str("F:/Programming/thesis/CostofBeingOvertook/"+raceDict[raceId]+"CostofBeingOvertook.eps")
+    #plt.savefig(fileName)
     plt.show()
 
     print(len(overtakeList)," overtakes in all\n")
