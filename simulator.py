@@ -287,7 +287,7 @@ class Race(object):
                     self.timeCosts[followerKey] += overlapCompensation['slow']
 
 def main():
-    for i in range(10):
-        race2019 = Race(1012,"HAM")  
+    for i in range(3):
+        race2019 = Race(1012,"GAS")  
 if __name__ == '__main__':
     main()
