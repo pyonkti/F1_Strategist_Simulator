@@ -18,8 +18,6 @@ usedSoftReferenceDict = {"GAS": 100880}
 
 startOffFactorDict = {"HAM": 1.085, "BOT": 1.10, "LEC": 1.116, "VET": 1.123, "VER": 1.136, "GAS": 1.143}
 
-vscAffectedTimeDict = {"HAM": 45000, "BOT": 43016, "LEC": 41346, "VET": 40674, "VER": 38663, "GAS": 37285}
-
 pitLaneTimeDict = {"HAM": 23130, "BOT": 23130, "LEC": 23053, "VET": 23053, "VER": 22605, "GAS": 22605}
 
 xHamMediumNew = [0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30]
@@ -67,10 +65,20 @@ xVerHardNew = np.array(xVerHardNew)
 yVerHardNew = [0,275,43,-46,302,633,940,1643,1994,2788,4356,6162,7857,9247,10749,12367,14241,15819,17641,19712,21136,22824,24236,25618,26876,28408,30046,31713,33578,35300,36901,38003,39189,38915,40041,40488,39957,23000,-7000]
 yVerHardNew = np.array(yVerHardNew)
 
-xSaiSoftNew = [0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
-xSaiSoftNew = np.array(xSaiSoftNew)
-ySaiSoftNew = [0,933,1782,2278,3360,4817,6315,6716,7497,8410,9661,10607,11260,11096,10547,9900,8534,7996]
-ySaiSoftNew = np.array(ySaiSoftNew)
+xHamSoftNew = [0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30]
+xHamSoftNew = np.array(xHamSoftNew)
+yHamSoftNew = [0,200,1014,1746,2137,3095,4416,5777,6076,6743,7537,8659,9485,10318,11038,11482,11443,11967,11937,11800,5000,-10000]
+yHamSoftNew = np.array(yHamSoftNew)
+
+xVetSoftNew = [0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30]
+xVetSoftNew = np.array(xVetSoftNew)
+yVetSoftNew = [0,200,718,1154,1247,1909,2936,4003,4003,4373,4871,5698,6228,6765,7188,7334,6996,7223,6894,6500,-500,-20000]
+yVetSoftNew = np.array(yVetSoftNew)
+
+xVerSoftNew = [0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25,30]
+xVerSoftNew = np.array(xVerSoftNew)
+yVerSoftNew = [0,200,453,623,448,846,1611,2416,2149,2253,2486,3049,3314,3586,3744,3623,3015,2975,2376,2000,-5000,-30000]
+yVerSoftNew = np.array(yVerSoftNew)
 
 xGasSoftUsed = [0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,20,25,30]
 xGasSoftUsed = np.array(xGasSoftUsed)
@@ -79,30 +87,34 @@ yGasSoftUsed = np.array(yGasSoftUsed)
 
 x2 = np.linspace(0, 40, 20)
 
-p_usedMedium_Ham = np.polyfit(xHamMediumUsed , yHamMediumUsed , 4) 
-p_newSoft = np.polyfit(xSaiSoftNew , ySaiSoftNew , 4)
 p_usedSoft = np.polyfit(xGasSoftUsed, yGasSoftUsed, 4)
+
+p_usedMedium_Ham = np.polyfit(xHamMediumUsed , yHamMediumUsed , 4) 
+p_newSoft_Ham = np.polyfit(xHamSoftNew , yHamSoftNew , 4)
 p_newMedium_Ham = np.polyfit(xHamMediumNew , yHamMediumNew , 4) 
 p_newHard_Ham = np.polyfit(xHamHardNew , yHamHardNew , 4)
 
 p_usedMedium_Vet = np.polyfit(xVetMediumUsed , yVetMediumUsed , 4) 
 p_newMedium_Vet = np.polyfit(xVetMediumNew , yVetMediumNew , 4) 
 p_newHard_Vet = np.polyfit(xVetHardNew , yVetHardNew , 4)  
+p_newSoft_Vet = np.polyfit(xVetSoftNew , yVetSoftNew , 4)
 
 p_usedMedium_Ver = np.polyfit(xVerMediumUsed , yVerMediumUsed , 4) 
 p_newMedium_Ver = np.polyfit(xVerMediumNew , yVerMediumNew , 4) 
-p_newHard_Ver = np.polyfit(xVetHardNew , yVerHardNew , 4) 
+p_newHard_Ver = np.polyfit(xVerHardNew , yVerHardNew , 4) 
+p_newSoft_Ver = np.polyfit(xVerSoftNew , yVerSoftNew , 4)
 
 usedMediumDict = {"HAM": p_usedMedium_Ham, "BOT": p_usedMedium_Ham, "LEC": p_usedMedium_Vet, "VET": p_usedMedium_Vet, "VER": p_usedMedium_Ver, "GAS": p_usedMedium_Ver} 
 newMediumDict = {"HAM": p_newMedium_Ham, "BOT": p_newMedium_Ham, "LEC": p_newMedium_Vet, "VET": p_newMedium_Vet, "VER": p_newMedium_Ver, "GAS": p_newMedium_Ver} 
 newHardDict = {"HAM": p_newHard_Ham, "BOT": p_newHard_Ham, "LEC": p_newHard_Vet, "VET": p_newHard_Vet, "VER": p_newHard_Ver, "GAS": p_newHard_Ver} 
+newSoftDict = {"HAM": p_newSoft_Ham, "BOT": p_newSoft_Ham, "LEC": p_newSoft_Vet, "VET": p_newSoft_Vet, "VER": p_newSoft_Ver, "GAS": p_newSoft_Ver} 
 
 def lapTimeUsedMedium(lap,key):
     
     """
     #remove following section before using onestop()/twostop()
 
-    yvals = p_usedMedium_Ham[0]*x2**4 + p_usedMedium_Ham[1]*x2**3 + p_usedMedium_Ham[2]*x2**2 + p_usedMedium_Ham[3]*x2 + p_usedMedium_Ham[4]  
+    yvals = usedMediumDict[key][0]*x2**4 + usedMediumDict[key][1]*x2**3 + usedMediumDict[key][2]*x2**2 + usedMediumDict[key][3]*x2 + usedMediumDict[key][4]
     plt.plot(x2, yvals, 'k', label='used medium')
     plt.scatter(xHamMediumUsed , yHamMediumUsed)
     plt.legend()
@@ -110,23 +122,23 @@ def lapTimeUsedMedium(lap,key):
     
     deltaTime = 4*usedMediumDict[key][0]*lap**3 + 3*usedMediumDict[key][1]*lap**2 + 2*usedMediumDict[key][2]*lap + usedMediumDict[key][3]
     finalTime = usedMediumReferenceDict[key] - deltaTime
-    deviation = 200 * random.normalvariate(0, 1)
+    deviation = 200 * random.normalvariate(0, 0.674)
     return(finalTime+deviation)
     
 def lapTimeNewSoft(lap,key):
-    
+   
     """
     #remove following section before using onestop()/twostop()
          
-    yvals = p_newSoft[0]*x2**4 + p_newSoft[1]*x2**3 + p_newSoft[2]*x2**2 + p_newSoft[3]*x2 + p_newSoft[4]  
+    yvals = newSoftDict[key][0]*x2**4 + newSoftDict[key][1]*x2**3 + newSoftDict[key][2]*x2**2 + newSoftDict[key][3]*x2 + newSoftDict[key][4]  
     plt.plot(x2, yvals, 'r', label='new soft')
-    plt.scatter(xSaiSoftNew , ySaiSoftNew)
-    plt.legend()
-    """   
+    plt.scatter(xVetSoftNew , yVetSoftNew)
+    plt.legend() 
+    """
     
-    deltaTime = 4*p_newSoft[0]*lap**3 + 3*p_newSoft[1]*lap**2 + 2*p_newSoft[2]*lap + p_newSoft[3]
+    deltaTime = 4*newSoftDict[key][0]*lap**3 + 3*newSoftDict[key][1]*lap**2 + 2*newSoftDict[key][2]*lap + newSoftDict[key][3]
     finalTime = newSoftReferenceDict[key] - deltaTime
-    deviation = 200 * random.normalvariate(0, 1)
+    deviation = 220 * random.normalvariate(0, 0.674)
     return(finalTime+deviation)
     
 def lapTimeUsedSoft(lap,key):
@@ -142,7 +154,7 @@ def lapTimeUsedSoft(lap,key):
     
     deltaTime = 4*p_usedSoft[0]*lap**3 + 3*p_usedSoft[1]*lap**2 + 2*p_usedSoft[2]*lap + p_usedSoft[3]
     finalTime = usedSoftReferenceDict[key] - deltaTime
-    deviation = 200 * random.normalvariate(0, 1)
+    deviation = 350 * random.normalvariate(0, 0.674)
     return(finalTime+deviation)    
 
 def lapTimeNewMedium(lap,key):
@@ -150,7 +162,7 @@ def lapTimeNewMedium(lap,key):
     """
     #remove following section before using onestop()/twostop()
    
-    yvals = p_newMedium_Ham[0]*x2**4 + p_newMedium_Ham[1]*x2**3 + p_newMedium_Ham[2]*x2**2 + p_newMedium_Ham[3]*x2 + p_newMedium_Ham[4]  
+    yvals = newMediumDict[key][0]*x2**4 + newMediumDict[key][1]*x2**3 + newMediumDict[key][2]*x2**2 + newMediumDict[key][3]*x2 + newMediumDict[key][4]  
     plt.plot(x2, yvals, 'y', label='new medium')
     plt.scatter(xHamMediumNew , yHamMediumNew)
     plt.legend() 
@@ -158,7 +170,7 @@ def lapTimeNewMedium(lap,key):
     
     deltaTime = 4*newMediumDict[key][0]*lap**3 + 3*newMediumDict[key][1]*lap**2 + 2*newMediumDict[key][2]*lap + newMediumDict[key][3]
     finalTime = newMediumReferenceDict[key] - deltaTime
-    deviation = 200 * random.normalvariate(0, 1)
+    deviation = 350 * random.normalvariate(0, 0.674)
     return(finalTime+deviation)
     
 def lapTimeNewHard(lap,key):
@@ -166,7 +178,7 @@ def lapTimeNewHard(lap,key):
     """
     #remove following section before using onestop()/twostop()
     x2 = np.linspace(0, 60, 20)
-    yvals = p_newHard_Ham[0]*x2**4 + p_newHard_Ham[1]*x2**3 + p_newHard_Ham[2]*x2**2 + p_newHard_Ham[3]*x2 + p_newHard_Ham[4]  
+    yvals = newHardDict[key][0]*x2**4 + newHardDict[key][1]*x2**3 + newHardDict[key][2]*x2**2 + newHardDict[key][3]*x2 + newHardDict[key][4]  
     plt.plot(x2, yvals, 'b', label='new hard')
     plt.scatter(xHamHardNew,yHamHardNew)
     plt.legend()
@@ -174,29 +186,37 @@ def lapTimeNewHard(lap,key):
     
     deltaTime = 4*newHardDict[key][0]*lap**3 + 3*newHardDict[key][1]*lap**2 + 2*newHardDict[key][2]*lap + newHardDict[key][3]
     finalTime = newHardReferenceDict[key] - deltaTime
-    deviation = 500 * random.normalvariate(0, 1)
+    deviation = 320 * random.normalvariate(0, 1)
     return(finalTime+deviation)
     
 def pitTimeGenerate(lastLapTime, newTyre, condition, key):
     if condition == 'in':
-        pitInTime = lastLapTime + lastLapTime * 0.045 + 100 * random.normalvariate(0, 0.618)
+        pitInTime = lastLapTime + lastLapTime * 0.045 + 300 * random.normalvariate(0, 0.674)
         return int(pitInTime)
     if condition == 'out':
-        laneTime = pitLaneTimeDict[key] + 1000 * random.normalvariate(0, 0.618)
-        if newTyre == "Soft":
-            pitOuTtime = lapTimeNewSoft(2,key) * 0.97 + 100 * random.normalvariate(0, 1)
-        if newTyre == "Medium":
-            pitOuTtime = lapTimeNewMedium(2,key) * 0.97 + 100 * random.normalvariate(0, 1)
-        if newTyre == "Hard":
-            pitOuTtime = lapTimeNewHard(2,key) * 0.97 + 100 * random.normalvariate(0, 1)
-        return (int(laneTime+pitOuTtime))
+        laneTime = pitLaneTimeDict[key] + 750 * random.normalvariate(0, 0.674)
+        pitOutTime =  int()
+        if newTyre == 'Soft':
+            pitOutTime = lapTimeNewSoft(2,key) * 0.97 + 220 * random.normalvariate(0, 0.674)
+        if newTyre == 'Medium':
+            pitOutTime = lapTimeNewMedium(2,key) * 0.97 + 350 * random.normalvariate(0, 0.674)
+        if newTyre == 'Hard':
+            pitOutTime = lapTimeNewHard(2,key) * 0.97 + 320 * random.normalvariate(0, 0.674)
+        temp = {"lane":laneTime, "out":pitOutTime}
+        return temp
     
 def startOff(laptime,key):
-    return startOffFactorDict[key] * laptime + 200 * random.normalvariate(0, 1)#1.10569 comes from HAM/BOT/lEC/VET when first lap divided by the third lap and then take the average
+    return startOffFactorDict[key] * laptime + 200 * random.normalvariate(0, 0.674)#1.10569 comes from HAM/BOT/lEC/VET when first lap divided by the third lap and then take the average
     
-def virtualSafetyCar(expectedLaptime,key):
+def virtualSafetyCar(expectedLaptime,currentTime,vscStart,vscLast,key):
     factor = 127700/expectedLaptime #according to the rules of Virtual Safety Car, the gap of all cars would be maintained by following a reference lap which is roughly 30% slower than the leader.
-    return expectedLaptime-vscAffectedTimeDict[key]/factor + vscAffectedTimeDict[key] + 100 * random.normalvariate(0, 1)
+    if currentTime-vscStart < vscLast:
+        affectedTime = vscStart + vscLast-currentTime
+        if affectedTime > expectedLaptime:
+            return 127700 + 200 * random.normalvariate(0, 1)
+    else:
+        affectedTime = 0
+    return expectedLaptime- affectedTime + affectedTime*factor + 200 * random.normalvariate(0, 1)
       
 def oneStop():
     timeConsumption = 0
@@ -246,11 +266,11 @@ def twoStop():
         print(int(temp))
     print(timeConsumption)
 
-"""  
+
 def main():
-    oneStop()
-    twoStop()
+    #oneStop()
+    #twoStop()
+    lapTimeNewSoft(1,"VET")
     
 if __name__ == '__main__':
     main()
-"""

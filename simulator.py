@@ -39,6 +39,10 @@ class Race(object):
     lastPit = dict()                                                            # Stores the lap where the last pit happens
     driverNextLapTime = dict() 
     driverLastLapTime = dict()
+    pitLaneTime = dict()
+    vscStart = list()
+    vscLast = list()
+    vscTimes = 0
     raceData = 0                                                                # Specific race data for one mathch
     player = ''
     endFlag = False                                                             # Whether user called for quit or not
@@ -46,7 +50,8 @@ class Race(object):
     raceEndFlag = False                                                         # Wheter the race is ended or not
     finalResultFlag = False
     dropFlag = False
-    sortFlag = False    
+    sortFlag = False
+    vscFlag = False      
     lateInstructionFlag = False                                                 # Whether too late for giving instruction at this lap or not
 
     """
@@ -72,6 +77,10 @@ class Race(object):
         self.pitTimes = dict(zip(self.codes,self.lastPitLap))
         self.driverLastLapTime = dict(zip(self.codes,self.lastPitLap))
         self.driverNextLapTime = dict(zip(self.codes,self.lastPitLap))
+        self.pitLaneTime = dict(zip(self.codes,self.lastPitLap))
+        self.vscStart = [86400,319271]
+        self.vscLast = [65000,65000]
+        self.vscTimes = 0
         self.fastDrivers = ["HAM","BOT","LEC","VET","VER","GAS"]
         self.result.drop(self.result.index,inplace=True) 
         self.dropRacer = list()
@@ -82,14 +91,14 @@ class Race(object):
         self.dropFlag = False
         self.sortFlag = False    
         self.lateInstructionFlag = False
-        
+        self.vscFlag = False
         """
         Preload first lap statistics before started
         """
         
         firstLap = self.raceData[self.raceData['lap'].isin([1])]
         firstLap = firstLap.reset_index(drop=True)
-        for i in range(len(set(firstLap['code']))):
+        for i,v in enumerate(set(firstLap['code'])):
             if firstLap['code'][i] in self.fastDrivers:
                 if firstLap['code'][i] == "GAS":
                     currentLapTime = int(hamLTG.startOff(int(hamLTG.lapTimeUsedSoft(2,firstLap['code'][i])),firstLap['code'][i]))
@@ -155,6 +164,7 @@ class Race(object):
         otherStyleTime = datetime.strftime(timearr,"%M:%S.%f")[:-3]
         timeGap = str("+"+otherStyleTime)
         self.result.iloc[self.renewOrder,7] = timeGap
+        #print(self.result[['code','lap','time','milliseconds','timeGap','selfComparison','tyreCondition']])
         
     def findPosition(self,newestRecord):
         if len(self.result['lap']) == 0:
@@ -186,22 +196,53 @@ class Race(object):
         otherStyleTime = datetime.strftime(timearr,"%M:%S.%f")[:-3]
         outputTime = str(otherStyleTime)
         return outputTime
-        
+    
+    def vscTimeGenerator(self):
+        timeCostsKeys = list(self.timeCosts.keys())
+        for i,key in enumerate(timeCostsKeys):
+            expectedNextPassTime = self.timeCosts[key]
+            self.timeCosts[key] -= self.driverNextLapTime[key]
+            if 0 <= expectedNextPassTime - self.vscStart[self.vscTimes] < self.vscLast[self.vscTimes] :
+                self.driverNextLapTime[key] = int(hamLTG.virtualSafetyCar(self.driverNextLapTime[key],self.vscStart[self.vscTimes],self.vscStart[self.vscTimes], expectedNextPassTime - self.vscStart[self.vscTimes],key))
+            elif expectedNextPassTime - self.vscStart[self.vscTimes] >= self.vscLast[self.vscTimes]:
+                self.driverNextLapTime[key] = int(hamLTG.virtualSafetyCar(self.driverNextLapTime[key],self.vscStart[self.vscTimes],self.vscStart[self.vscTimes],self.vscLast[self.vscTimes],key))
+            self.timeCosts[key] += self.driverNextLapTime[key]
+            self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lap[key]), 'milliseconds'] =  self.driverNextLapTime[key]
+    
+    def safetyFlagJudgment(self,value):
+        tempVscFlag = False
+        if not self.vscFlag:
+            for i,v in enumerate(self.vscStart):
+                if 0 <= value - v < self.vscLast[i]:
+                    self.vscFlag = True
+                    self.vscTimes = i
+                    if i > 0:
+                        tempVscFlag = True
+                    break
+        if self.vscFlag:
+            if value - self.vscStart[self.vscTimes] >= self.vscLast[self.vscTimes]:
+                self.vscFlag = False
+        if tempVscFlag:
+            tempVscFlag = False
+            self.vscTimeGenerator()
+     
     def fun_timer(self):
         while 1:
             if self.finalResultFlag:
                 break
             self.dropFlag = False
-            for key,value in self.timeCosts.items():
-                if any(formerValue < value for formerValue in list(self.timeCosts.values())):
-                    break
-                thisLap = self.raceData[self.raceData['lap'].isin([self.lap[key]])]
-                thisLap = thisLap.reset_index(drop=True)
-                if(self.lap[key] == 56):
-                    self.raceEndFlag = True
-                self.output(thisLap[thisLap['code'] == key], key)
-                self.endJudgement(key)
-                self.nextLap(key)
+            timeCostsValues = list(self.timeCosts.values())
+            timeCostsKeys = list(self.timeCosts.keys())
+            value = timeCostsValues[0]
+            key = timeCostsKeys[0]
+            self.safetyFlagJudgment(value)
+            thisLap = self.raceData[self.raceData['lap'].isin([self.lap[key]])]
+            thisLap = thisLap.reset_index(drop=True)
+            if(self.lap[key] == 56):
+                self.raceEndFlag = True
+            self.output(thisLap[thisLap['code'] == key], key)
+            self.endJudgement(key)
+            self.nextLap(key)
             if self.dropFlag:
                 for racer in self.dropRacer:
                     del self.timeCosts[racer]
@@ -222,19 +263,16 @@ class Race(object):
         nextLap = nextLap.reset_index(drop=True)
         if key in set(nextLap['code']):
             if key in self.fastDrivers:
+               if key in self.fastDrivers:
                 if (self.lap[key] == self.lastPit[key]):
                     outLapTime = self.raceData[(self.raceData['code'] == key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lap[key]+1)].iloc[0,5]
-                    self.timeCosts[key] += outLapTime
-                    self.driverNextLapTime[key] = outLapTime
-                    self.lap[key] += 1                                  
-                elif self.lap[key] == 1:
-                    if key == "GAS":
-                        self.driverNextLapTime[key] = int(hamLTG.virtualSafetyCar(int(hamLTG.lapTimeUsedSoft(2,key)),key))
-                    else:
-                        self.driverNextLapTime[key] = int(hamLTG.virtualSafetyCar(int(hamLTG.lapTimeUsedMedium(2,key)),key))
+                    if self.vscFlag:  
+                        self.driverNextLapTime[key] = self.pitLaneTime[key] + int(hamLTG.virtualSafetyCar(outLapTime-self.pitLaneTime[key],self.timeCosts[key]+self.pitLaneTime[key],self.vscStart[self.vscTimes],self.vscLast[self.vscTimes],key))
+                    else:    
+                        self.driverNextLapTime[key] = outLapTime
                     self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lap[key]+1), 'milliseconds'] =  self.driverNextLapTime[key]
-                    self.timeCosts[key] += self.driverNextLapTime[key]
-                    self.lap[key] += 1                                                       
+                    self.timeCosts[key] += self.driverNextLapTime[key]                   
+                    self.lap[key] += 1                                                                                        
                 else:
                     driverTyreInfo = tyreChoice[tyreChoice['raceId'].isin([self.raceId]) & tyreChoice['code'].isin([key])]
                     currentTyre = str(re.search(r'^[a-zA-Z]*\s*[a-zA-Z]*',str(driverTyreInfo.iloc[0,2+self.pitTimes[key]])).group())
@@ -251,15 +289,28 @@ class Race(object):
                     elif currentTyre == 'Hard':
                         self.driverNextLapTime[key] = int(hamLTG.lapTimeNewHard(self.lap[key]-self.lastPit[key]+1,key))
                     if self.lap[key]-self.lastPit[key] == expectedLapsOnTyre-1:
-                         self.driverNextLapTime[key] = int(hamLTG.pitTimeGenerate(self.driverNextLapTime[key],'','in',key))
-                    self.overtake(key)
-                    self.overLap(key)
+                        if key != self.player:
+                            self.driverNextLapTime[key] = int(hamLTG.pitTimeGenerate(self.driverNextLapTime[key],'','in',key))
+                            nextTyre = str(re.search(r'^[a-zA-Z]*\s*[a-zA-Z]*',str(driverTyreInfo.iloc[0,3+self.pitTimes[key]])).group())
+                            nextTyre = nextTyre.strip()
+                            temp = hamLTG.pitTimeGenerate(0,nextTyre,'out',key)
+                            self.pitLaneTime[key] = int(temp['lane'])
+                            sumTime = int(temp['lane']+temp['out'])
+                            self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lap[key]+2), 'milliseconds'] = sumTime
+                    if self.vscFlag:  
+                        self.driverNextLapTime[key] = int(hamLTG.virtualSafetyCar(self.driverNextLapTime[key],self.timeCosts[key],self.vscStart[self.vscTimes],self.vscLast[self.vscTimes],key))
+                    else:
+                        self.overtake(key)
+                        self.overLap(key)
                     self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lap[key]+1), 'milliseconds'] =  self.driverNextLapTime[key]
                     self.timeCosts[key] += self.driverNextLapTime[key]
-                    self.lap[key] += 1                       
+                    self.lap[key] += 1                      
             else:
                 self.driverNextLapTime[key] = nextLap[nextLap['code'] == key].iloc[0,5]
-                self.timeCosts[key] += nextLap[nextLap['code'] == key].iloc[0,5]
+                if self.vscFlag and self.vscTimes > 0:
+                    self.driverNextLapTime[key] = int(hamLTG.virtualSafetyCar(self.driverNextLapTime[key],self.timeCosts[key],self.vscStart[self.vscTimes],self.vscLast[self.vscTimes],key))
+                self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lap[key]+1), 'milliseconds'] =  self.driverNextLapTime[key]
+                self.timeCosts[key] += self.driverNextLapTime[key]
                 self.lap[key] += 1
         else:
             self.dropFlag = True
@@ -287,7 +338,7 @@ class Race(object):
                     self.timeCosts[followerKey] += overlapCompensation['slow']
 
 def main():
-    for i in range(3):
-        race2019 = Race(1012,"GAS")  
+    for i in range(1):
+        race2019 = Race(1012,"HAM")  
 if __name__ == '__main__':
     main()
