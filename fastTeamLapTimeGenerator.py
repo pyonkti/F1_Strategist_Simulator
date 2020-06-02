@@ -210,7 +210,7 @@ def startOff(laptime,key):
     
 def virtualSafetyCar(expectedLaptime,currentTime,vscStart,vscLast,key):
     factor = 127700/expectedLaptime #according to the rules of Virtual Safety Car, the gap of all cars would be maintained by following a reference lap which is roughly 30% slower than the leader.
-    if currentTime-vscStart < vscLast:
+    if 0 <= currentTime-vscStart < vscLast:
         affectedTime = vscStart + vscLast-currentTime
         if affectedTime > expectedLaptime:
             return 127700 + 200 * random.normalvariate(0, 1)

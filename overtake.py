@@ -7,6 +7,7 @@ Created on Tue May 12 19:04:32 2020
 
 from scipy.optimize import curve_fit
 import numpy as np
+import matplotlib.pyplot as plt
 import random
 
 gapPossibility = [1.0, 1.25, 1.0, 0.41666667, 0.75, 0.48484848, 0.71428571, 0.36538462, 0.34328358, 0.25714286, 0.35616438, 0.22666667, 0.19277108, 0.15873016, 0.11428571, 0.31707317, 0.16129032, 0.11538462, 0.2]
@@ -54,12 +55,16 @@ bCostOtking=popt[1]
 cCostOtking=popt[2]
 
 """
+Following part is for drawing diagrams
+"""
+
+"""
 yCostofOvertake = funcCostofOvertake(xCostOvertakeLinear,aCostOtking,bCostOtking,cCostOtking)
 plot1=plt.plot(xCostOvertakeScatter, costOfOvertake, '*',label='original values')
 plot2=plt.plot(xCostOvertakeLinear, yCostofOvertake, 'r',label='curve_fit values')
 plt.xlabel('x axis')
 plt.ylabel('y axis')
-plt.title('CostOfOvertaking(Inverse funciton)')
+plt.title('Cost Of Overtaking')
 plt.show()
 
 yCostofBeOvertake = funcCostofBeingOvertake(xCostOvertakeLinear)
@@ -67,7 +72,7 @@ plot1=plt.plot(xCostOvertakeScatter, costofBeingOvertake, '*',label='original va
 plot2=plt.plot(xCostOvertakeLinear, yCostofBeOvertake, 'r',label='curve_fit values')
 plt.xlabel('x axis')
 plt.ylabel('y axis')
-plt.title('CostOfBeingOvertaken(Inverse funciton)')
+plt.title('Cost Of Being Overtaken')
 plt.show()
 """
 
@@ -78,6 +83,12 @@ cGap=popt[2]
 yGap=funcGap(xGapLinear,aGap,bGap,cGap)
 
 pAdv = np.polyfit(xAdvScatter , advPossibility , 3) 
+def funcAdv(x):
+    return pAdv[0]*x**3 + pAdv[1]*x**2 + pAdv[2]*x + pAdv[3]
+
+"""
+Following part is for drawing diagrams
+"""
 
 """
 plot1=plt.plot(xGapScatter, gapPossibility, '*',label='original values')
@@ -94,72 +105,83 @@ plt.title('Possibility Scatter by Accumulation(ADV)')
 plt.show()
 """
 
-def funcAdv(x):
-    return pAdv[0]*x**3 + pAdv[1]*x**2 + pAdv[2]*x + pAdv[3]
+
 
 def overtakeJudgement(gap,adv):
     overtakeResult = {"pursuer":0,"leader":0}  
     if adv < 1250:
         randomNumber = random.random()
         if (randomNumber <= funcGap(gap,aGap,bGap,cGap)):
-            randomNumber = random.uniform(0.3,0.71)
+            randomNumber = random.uniform(0.01,0.7)
             timeCostofOvertaker = int(funcCostofOvertakeReverse(randomNumber,aCostOtking,bCostOtking,cCostOtking))
+            if timeCostofOvertaker < 0:
+                timeCostofOvertaker = 0
             randomNumber = random.uniform(0.047,0.86)
             timeCostofLeader = int(funcCostofBeingOvertakeReverse(randomNumber))
+            if  timeCostofLeader < 0:
+                timeCostofLeader = 0
             overtakeResult['pursuer'] = timeCostofOvertaker
             overtakeResult['leader'] = timeCostofLeader
             return(overtakeResult)
         else:
             randomNumber = random.uniform(0.4,0.5)
             timeCostofOvertaker = int(funcCostofOvertakeReverse(randomNumber,aCostOtking,bCostOtking,cCostOtking))
-            randomNumber = random.uniform(0.047,0.86)
+            randomNumber = random.uniform(0.09,0.86)
             timeCostofLeader = int(funcCostofBeingOvertakeReverse(randomNumber))
-            if timeCostofOvertaker - (adv-gap) <= 300:
-                overtakeResult['pursuer'] = timeCostofLeader + adv-(gap-int(300 + 50 * random.normalvariate(0, 0.618))) 
+            if timeCostofOvertaker - (adv-gap) <= 100:
+                overtakeResult['pursuer'] = timeCostofLeader + adv-(gap-int(100 + 20 * random.normalvariate(0, 0.618))) 
             else:
                 overtakeResult['pursuer'] = timeCostofLeader + adv-(gap-timeCostofOvertaker)  
             overtakeResult['leader'] = timeCostofLeader
             return(overtakeResult)
-    elif adv >= 1250:
+    else:
         gapFactor = funcGap(gap,aGap,bGap,cGap)
         advFactor = funcAdv(adv)
         randomNumber = random.random()
         if advFactor > gapFactor:         
             if (randomNumber <= advFactor):
-                randomNumber = random.uniform(0.3,0.71)
+                randomNumber = random.uniform(0.01,0.71)
                 timeCostofOvertaker = int(funcCostofOvertakeReverse(randomNumber,aCostOtking,bCostOtking,cCostOtking))
+                if timeCostofOvertaker < 0:
+                    timeCostofOvertaker = 0
                 randomNumber = random.uniform(0.047,0.86)
                 timeCostofLeader = int(funcCostofBeingOvertakeReverse(randomNumber))
+                if  timeCostofLeader < 0:
+                    timeCostofLeader = 0
                 overtakeResult['pursuer'] = timeCostofOvertaker
                 overtakeResult['leader'] = timeCostofLeader
                 return(overtakeResult)
             else:
                 randomNumber = random.uniform(0.4,0.5)
                 timeCostofOvertaker = int(funcCostofOvertakeReverse(randomNumber,aCostOtking,bCostOtking,cCostOtking))
-                randomNumber = random.uniform(0.047,0.86)
+                randomNumber = random.uniform(0.09,0.86)
                 timeCostofLeader = int(funcCostofBeingOvertakeReverse(randomNumber))
-                if timeCostofOvertaker - (adv-gap) <= 300:
-                    overtakeResult['pursuer'] = timeCostofLeader + adv-(gap-int(300 + 50 * random.normalvariate(0, 0.618))) 
+                if timeCostofOvertaker - (adv-gap) <= 100:
+                    overtakeResult['pursuer'] = timeCostofLeader + adv-(gap-int(100 + 20 * random.normalvariate(0, 0.618))) 
                 else:
                     overtakeResult['pursuer'] = timeCostofLeader + adv-(gap-timeCostofOvertaker)  
                 overtakeResult['leader'] = timeCostofLeader
                 return(overtakeResult)
         else:
             if (randomNumber <= gapFactor):
-                randomNumber = random.uniform(0.3,0.71)
+                randomNumber = random.uniform(0.01,0.71)
                 timeCostofOvertaker = int(funcCostofOvertakeReverse(randomNumber,aCostOtking,bCostOtking,cCostOtking))
+                if timeCostofOvertaker < 0:
+                    timeCostofOvertaker = 0
                 randomNumber = random.uniform(0.047,0.86)
                 timeCostofLeader = int(funcCostofBeingOvertakeReverse(randomNumber))
+                if  timeCostofLeader < 0:
+                    timeCostofLeader = 0
                 overtakeResult['pursuer'] = timeCostofOvertaker
                 overtakeResult['leader'] = timeCostofLeader
                 return(overtakeResult)
             else:
                 randomNumber = random.uniform(0.4,0.5)
                 timeCostofOvertaker = int(funcCostofOvertakeReverse(randomNumber,aCostOtking,bCostOtking,cCostOtking))
-                randomNumber = random.uniform(0.047,0.86)
+                randomNumber = random.uniform(0.09,0.86)
                 timeCostofLeader = int(funcCostofBeingOvertakeReverse(randomNumber))
-                if timeCostofOvertaker - (adv-gap) <= 300:
-                    overtakeResult['pursuer'] = timeCostofLeader + adv-(gap-int(300 + 50 * random.normalvariate(0, 0.618))) 
+                if timeCostofOvertaker - (adv-gap) <= 100:
+                    overtakeResult['pursuer'] = timeCostofLeader + adv-(gap-int(100 + 20 * random.normalvariate(0, 0.618))) 
                 else:
                     overtakeResult['pursuer'] = timeCostofLeader + adv-(gap-timeCostofOvertaker)  
                 overtakeResult['leader'] = timeCostofLeader

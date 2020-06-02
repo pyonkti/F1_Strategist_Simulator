@@ -48,11 +48,11 @@ class Race(object):
     raceData = 0                                                                # Specific race data for one mathch
     endFlag = False                                                             # Whether user called for quit or not
     pauseFlag = False                                                           # Whether user called pause or not
-    raceEndFlag = False                                                         # Wheter the race is ended or not
-    dropFlag = False
-    sortFlag = False
-    vscFlag = False    
-    lateInstructionFlag = False                                                 # Whether too late for giving instruction at this lap or not
+    raceEndFlag = False                                                         # Whether the race ended or not
+    dropFlag = False                                                            # Wheter the race is ended or not
+    sortFlag = False                                                            # Whether any racer has new lap record so that the time cost dictionary need to be sorted or not
+    vscFlag = False                                                             # Whether a virtual safety car is triggered or not
+    lateInstructionFlag = False                                                 # Whether it is too late to give instructions at this lap or not
 
     """
     The output result for every update
@@ -66,6 +66,7 @@ class Race(object):
         """
         self.player = choosenDriver
         self.raceId = raceId
+        self.fastDrivers = ["HAM","BOT","LEC","VET","VER","GAS"]
         self.raceData = merged[merged['raceId'].isin([raceId])] 
         self.raceData = self.raceData.reset_index(drop=True)
         self.codes = tuple(set(self.raceData['code']))
@@ -77,27 +78,29 @@ class Race(object):
         self.pitTimes = dict(zip(self.codes,self.lastPitLap))
         self.driverLastLapTime = dict(zip(self.codes,self.lastPitLap))
         self.driverNextLapTime = dict(zip(self.codes,self.lastPitLap))
-        self.pitLaneTime = dict(zip(self.codes,self.lastPitLap))
-        self.vscStart = [86400,319271]
-        self.vscLast = [65000,65000]
-        self.vscTimes = 0
-        self.fastDrivers = ["HAM","BOT","LEC","VET","VER","GAS"] 
+        self.pitLaneTime = dict(zip(self.codes,self.lastPitLap))        
         self.result.drop(self.result.index,inplace=True) 
         self.dropRacer = list()
         self.endFlag = False                                                             # Whether user called for quit or not
         self.pauseFlag = False                                                           # Whether user called pause or not
         self.raceEndFlag = False                                                         # Wheter the race is ended or not
-        self.dropFlag = False
+        self.dropFlag = False                                                            # Whether a racer is dropped from race or not
         self.sortFlag = False    
         self.lateInstructionFlag = False
+        
+        """
+        This is for setting up virtual safety car (when it starts and how long it lasts).Please set it up before running
+        """
+        self.vscStart = [86400,630271]
+        self.vscLast = [65000,65000]
+        self.vscTimes = 0      
         self.vscFlag = False
+        
         if self.player == 'GAS':
             tyreChoice.loc[(tyreChoice['code']== self.player) & (tyreChoice['raceId']==self.raceId), 'stint1'] =  'Used soft (56)'
         else:
             tyreChoice.loc[(tyreChoice['code']== self.player) & (tyreChoice['raceId']==self.raceId), 'stint1'] =  'Used medium (56)'   
-        
-        
-        
+               
         """
         Preload first lap statistics before started
         """
@@ -331,7 +334,7 @@ class Race(object):
         leader = str(self.result.iloc[pursuerLoc-1,0])
         gap = int(self.result.iloc[pursuerLoc,6]-self.result.iloc[pursuerLoc-1,6])
         adv = int(self.driverNextLapTime[leader]-self.driverNextLapTime[key])  
-        if not self.raceEndFlag and (adv-gap > 0) and (gap < 1000)  and not (self.lap[leader] == self.lastPit[leader] + 1) and not pursuerLoc == 0:
+        if not self.raceEndFlag and (adv-gap > 0) and (gap < 1000) and not (adv - gap > 1000)  and not (self.lap[leader] == self.lastPit[leader] + 1) and not pursuerLoc == 0:
             overtakeCompensation = otkCalculator.overtakeJudgement(gap,adv)
             self.driverNextLapTime[key] += overtakeCompensation['pursuer']
             self.driverNextLapTime[leader] += overtakeCompensation['leader']
