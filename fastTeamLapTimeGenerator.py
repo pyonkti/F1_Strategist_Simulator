@@ -217,7 +217,12 @@ def virtualSafetyCar(expectedLaptime,currentTime,vscStart,vscLast,key):
     else:
         affectedTime = 0
     return expectedLaptime- affectedTime + affectedTime*factor + 200 * random.normalvariate(0, 1)
-      
+
+"""
+For individual running test 
+"""
+
+"""      
 def oneStop():
     timeConsumption = 0
     firstLap = startOff(lapTimeUsedMedium(2,"HAM"),"HAM") 
@@ -266,11 +271,10 @@ def twoStop():
         print(int(temp))
     print(timeConsumption)
 
-
 def main():
     #oneStop()
     #twoStop()
-    lapTimeNewSoft(1,"VET")
     
 if __name__ == '__main__':
     main()
+"""

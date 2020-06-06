@@ -91,8 +91,8 @@ class Race(object):
         """
         This is for setting up virtual safety car (when it starts and how long it lasts).Please set it up before running
         """
-        self.vscStart = [86400,630271]
-        self.vscLast = [65000,65000]
+        self.vscStart = [86400]
+        self.vscLast = [65000]
         self.vscTimes = 0      
         self.vscFlag = False
         
@@ -252,6 +252,7 @@ class Race(object):
                 self.nextLap(key)
         if self.dropFlag:
             for racer in self.dropRacer:
+                del self.driverNextLapTime[racer]
                 del self.timeCosts[racer]
                 del self.lap[racer]
             self.dropRacer = list()
@@ -332,9 +333,11 @@ class Race(object):
     def overtake(self,key):
         pursuerLoc = pd.Index(list(self.result['code'])).get_loc(key)
         leader = str(self.result.iloc[pursuerLoc-1,0])
+        if pursuerLoc == 0 or leader not in self.driverNextLapTime.keys():
+            return    
         gap = int(self.result.iloc[pursuerLoc,6]-self.result.iloc[pursuerLoc-1,6])
         adv = int(self.driverNextLapTime[leader]-self.driverNextLapTime[key])  
-        if not self.raceEndFlag and (adv-gap > 0) and (gap < 1000) and not (adv - gap > 1000)  and not (self.lap[leader] == self.lastPit[leader] + 1) and not pursuerLoc == 0:
+        if not self.raceEndFlag and (adv-gap > 0) and (gap < 1000) and not (adv - gap > 1000)  and not (self.lap[leader] == self.lastPit[leader] + 1):
             overtakeCompensation = otkCalculator.overtakeJudgement(gap,adv)
             self.driverNextLapTime[key] += overtakeCompensation['pursuer']
             self.driverNextLapTime[leader] += overtakeCompensation['leader']

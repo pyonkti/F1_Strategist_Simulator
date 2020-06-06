@@ -17,8 +17,8 @@ tyreChoice = pd.read_csv(".\learn\\tyre.csv")
 merged = driverInfo.merge(lapTime, left_on='driverId', right_on = 'driverId', how = 'right')
 merged = merged.drop(columns= ['driverId'], axis=1)
 merged = merged.merge(tyreChoice, how = 'right')
-raceTuple = (862,882,903,928,950,970,991)
-yearTuple = ("2012","2013","2014","2015","2016","2017","2018")
+raceTuple = (862,882,903,928,950,970,991,1012)
+yearTuple = ("2012","2013","2014","2015","2016","2017","2018","2019")
 raceDict = dict(zip(raceTuple,yearTuple))
 overtakeList = list()
 overtakeAdvList = list()
@@ -196,13 +196,8 @@ def getResult(raceId):
     
     
 def main():
-    getResult(862)
-    getResult(882)
-    getResult(903)
-    getResult(928)
-    getResult(950)
-    getResult(970)
-    getResult(991)
+    getResult(1012)
+
        
 if __name__ == '__main__':
     main()

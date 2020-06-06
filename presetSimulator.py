@@ -7,12 +7,9 @@ Created on Fri May 15 23:59:39 2020
 import fastTeamLapTimeGenerator as hamLTG
 import overtake as otkCalculator
 import overlap as olpCalculator
-import threading
 import pandas as pd
 import re
 from datetime import datetime
-from pynput import keyboard
-from pynput.keyboard import Key, Controller
 
 
 lapTime = pd.read_csv("./learn/lap_times.csv")
@@ -23,6 +20,11 @@ merged = driverInfo.merge(lapTime, left_on='driverId', right_on = 'driverId', ho
 merged = merged.drop(columns= ['driverId'], axis=1)
 pd.set_option('display.max_columns',None)
 pd.set_option('display.width', 1000)    
+positionGlobal = list()
+timeCostGlobal = list()
+gapGlobal= list()
+overtakeGlobal = list()
+beOvertakenGlobal = list()
 
 class Race(object):
     raceId = 0                                                                  # the ID that tell what race it is
@@ -44,6 +46,8 @@ class Race(object):
     vscLast = list()
     vscTimes = 0
     raceData = 0                                                                # Specific race data for one mathch
+    overtakeCount = 0
+    beOvertakenCount = 0
     player = ''
     endFlag = False                                                             # Whether user called for quit or not
     pauseFlag = False                                                           # Whether user called pause or not
@@ -78,9 +82,11 @@ class Race(object):
         self.driverLastLapTime = dict(zip(self.codes,self.lastPitLap))
         self.driverNextLapTime = dict(zip(self.codes,self.lastPitLap))
         self.pitLaneTime = dict(zip(self.codes,self.lastPitLap))
-        self.vscStart = [86400,319271]
-        self.vscLast = [65000,65000]
+        self.vscStart = [86400]
+        self.vscLast = [65000]
         self.vscTimes = 0
+        self.overtakeCount = 0
+        self.beOvertakenCount = 0
         self.fastDrivers = ["HAM","BOT","LEC","VET","VER","GAS"]
         self.result.drop(self.result.index,inplace=True) 
         self.dropRacer = list()
@@ -245,6 +251,7 @@ class Race(object):
             self.nextLap(key)
             if self.dropFlag:
                 for racer in self.dropRacer:
+                    del self.driverNextLapTime[racer]
                     del self.timeCosts[racer]
                     del self.lap[racer]
             self.dropRacer = list()
@@ -254,8 +261,17 @@ class Race(object):
         if((key == self.player) & (self.raceEndFlag)):
             position = list(self.result['code']).index(self.player)+1
             timeCost = self.timeCosts[self.player]
+            gapTime = int(timeCost) - int(self.result.iloc[0,6])
             print("The race ended. You are "+ str(position))
             print("Total time cost: "+str(timeCost))
+            print("The gap between you and the 1st: "+str(gapTime))
+            print("You overtook "+str(self.overtakeCount)+" opponent(s)")
+            print("You were overtaken by "+str(self.beOvertakenCount)+" opponent(s)")
+            positionGlobal.append(position)
+            timeCostGlobal.append(timeCost)
+            gapGlobal.append(gapTime)
+            overtakeGlobal.append(self.overtakeCount)
+            beOvertakenGlobal.append(self.beOvertakenCount)
             self.finalResultFlag = True
             
     def nextLap(self,key):
@@ -267,7 +283,10 @@ class Race(object):
                 if (self.lap[key] == self.lastPit[key]):
                     outLapTime = self.raceData[(self.raceData['code'] == key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lap[key]+1)].iloc[0,5]
                     if self.vscFlag:  
-                        self.driverNextLapTime[key] = self.pitLaneTime[key] + int(hamLTG.virtualSafetyCar(outLapTime-self.pitLaneTime[key],self.timeCosts[key]+self.pitLaneTime[key],self.vscStart[self.vscTimes],self.vscLast[self.vscTimes],key))
+                        currentTime = self.timeCosts[key]+self.pitLaneTime[key]
+                        outTime = outLapTime-self.pitLaneTime[key]
+                        affectedOutlapTime = int(hamLTG.virtualSafetyCar(outTime,currentTime,self.vscStart[self.vscTimes],self.vscLast[self.vscTimes],key))
+                        self.driverNextLapTime[key] = self.pitLaneTime[key] +  affectedOutlapTime
                     else:    
                         self.driverNextLapTime[key] = outLapTime
                     self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lap[key]+1), 'milliseconds'] =  self.driverNextLapTime[key]
@@ -289,14 +308,13 @@ class Race(object):
                     elif currentTyre == 'Hard':
                         self.driverNextLapTime[key] = int(hamLTG.lapTimeNewHard(self.lap[key]-self.lastPit[key]+1,key))
                     if self.lap[key]-self.lastPit[key] == expectedLapsOnTyre-1:
-                        if key != self.player:
-                            self.driverNextLapTime[key] = int(hamLTG.pitTimeGenerate(self.driverNextLapTime[key],'','in',key))
-                            nextTyre = str(re.search(r'^[a-zA-Z]*\s*[a-zA-Z]*',str(driverTyreInfo.iloc[0,3+self.pitTimes[key]])).group())
-                            nextTyre = nextTyre.strip()
-                            temp = hamLTG.pitTimeGenerate(0,nextTyre,'out',key)
-                            self.pitLaneTime[key] = int(temp['lane'])
-                            sumTime = int(temp['lane']+temp['out'])
-                            self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lap[key]+2), 'milliseconds'] = sumTime
+                        self.driverNextLapTime[key] = int(hamLTG.pitTimeGenerate(self.driverNextLapTime[key],'','in',key))
+                        nextTyre = str(re.search(r'^[a-zA-Z]*\s*[a-zA-Z]*',str(driverTyreInfo.iloc[0,3+self.pitTimes[key]])).group())
+                        nextTyre = nextTyre.strip()
+                        temp = hamLTG.pitTimeGenerate(0,nextTyre,'out',key)
+                        self.pitLaneTime[key] = int(temp['lane'])
+                        sumTime = int(temp['lane']+temp['out'])
+                        self.raceData.loc[(self.raceData['code']== key) & (self.raceData['raceId']==self.raceId) & (self.raceData['lap']==self.lap[key]+2), 'milliseconds'] = sumTime
                     if self.vscFlag:  
                         self.driverNextLapTime[key] = int(hamLTG.virtualSafetyCar(self.driverNextLapTime[key],self.timeCosts[key],self.vscStart[self.vscTimes],self.vscLast[self.vscTimes],key))
                     else:
@@ -319,6 +337,8 @@ class Race(object):
     def overtake(self,key):
         pursuerLoc = pd.Index(list(self.result['code'])).get_loc(key)
         leader = str(self.result.iloc[pursuerLoc-1,0])
+        if pursuerLoc == 0 or leader not in self.driverNextLapTime.keys():
+            return    
         gap = int(self.result.iloc[pursuerLoc,6]-self.result.iloc[pursuerLoc-1,6])
         adv = int(self.driverNextLapTime[leader]-self.driverNextLapTime[key])  
         if not self.raceEndFlag and (adv-gap > 0) and (gap < 1000)  and not (self.lap[leader] == self.lastPit[leader] + 1) and not pursuerLoc == 0:
@@ -326,7 +346,11 @@ class Race(object):
             self.driverNextLapTime[key] += overtakeCompensation['pursuer']
             self.driverNextLapTime[leader] += overtakeCompensation['leader']
             self.timeCosts[leader] += overtakeCompensation['leader']
-
+            if key == self.player and adv - gap + overtakeCompensation['leader'] - overtakeCompensation['pursuer'] > 0:
+                self.overtakeCount += 1
+            elif leader == self.player and adv - gap + overtakeCompensation['leader'] - overtakeCompensation['pursuer'] > 0:
+                self.beOvertakenCount += 1
+            
     def overLap(self,key):
         currentRacerLoc = pd.Index(list(self.result['code'])).get_loc(key)
         follower = list(self.result['code'])[currentRacerLoc+1:]
@@ -338,7 +362,13 @@ class Race(object):
                     self.timeCosts[followerKey] += overlapCompensation['slow']
 
 def main():
-    for i in range(1):
-        race2019 = Race(1012,"HAM")  
+    for i in range(100):
+        race2019 = Race(1012,"VER") 
+    print(positionGlobal)
+    print(timeCostGlobal)
+    print(gapGlobal)
+    print(overtakeGlobal)
+    print(beOvertakenGlobal)
+    
 if __name__ == '__main__':
     main()
