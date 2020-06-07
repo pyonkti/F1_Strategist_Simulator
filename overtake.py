@@ -57,7 +57,7 @@ bCostOtking=popt[1]
 cCostOtking=popt[2]
 
 """
-Following part is for drawing diagrams
+Following part is for drawing Curve fitted result for the Time cost of Overtaking and Being overtaken
 """
 
 """
@@ -89,7 +89,7 @@ def funcAdv(x):
     return pAdv[0]*x**3 + pAdv[1]*x**2 + pAdv[2]*x + pAdv[3]
 
 """
-Following part is for drawing diagrams
+Following part is for drawing Curve fitted result for Overtake Probability on GAP and Lap Time Adv
 """
 
 """

@@ -217,7 +217,50 @@ class Race(object):
                     self.timeCostDict[key] = currentLapTime
         while self.currentLap < len(set(self.raceData['lap'])):
                 self.fun_timer()
-    
+        print(overlapCostList)
+        print(beOverlapCostList)
+        
+        data = np.array(overlapCostList) 
+        bins = np.linspace(-1000, 2000, num=30, endpoint=True, retstep=False, dtype=None)
+        plt.hist(data, bins) 
+        plt.title("F1 Shanghai: Time cost of Overlapping from 2012 to "+ raceDict[raceId]) 
+        plt.xlabel('milliseconds')
+        plt.ylabel('numbers')
+        fileName = str(".\CostofOverlapping\\"+raceDict[raceId]+"CostofOverlapping.eps")
+        plt.savefig(fileName)
+        plt.show()
+        
+        costOfOverlap = np.array(overlapCostList)
+        bins = np.linspace(-1000, 2000, num=30, endpoint=True, retstep=False, dtype=None)
+        countBeOvertakeCost,bins = np.histogram(costOfOverlap, bins)
+        data = np.true_divide(countBeOvertakeCost, len(costOfOverlap))       
+        x = np.arange(-1000, 1900, 100)
+        plt.scatter(x, data)
+        plt.title("F1 Shanghai: Time cost of overlapping from 2012 to "+ raceDict[raceId]) 
+        plt.xlabel('milliseconds')
+        plt.ylabel('probability') 
+        plt.show()
+        
+        data = np.array(beOverlapCostList) 
+        bins = np.linspace(-1000, 2000, num=30, endpoint=True, retstep=False, dtype=None)
+        plt.hist(data, bins) 
+        plt.title("F1 Shanghai: Time cost of being overlapped from 2012 to "+ raceDict[raceId]) 
+        plt.xlabel('milliseconds')
+        plt.ylabel('numbers')
+        fileName = str(".\CostofBeOverlapped\\"+raceDict[raceId]+"CostofBeOverlapping.eps")
+        plt.savefig(fileName)
+        plt.show()
+        
+        costOfBeOverlapped = np.array(beOverlapCostList)
+        bins = np.linspace(-1000, 8000, num=30, endpoint=True, retstep=False, dtype=None)
+        countBeOvertakeCost,bins = np.histogram(costOfBeOverlapped, bins)
+        data = np.true_divide(countBeOvertakeCost, len(costOfBeOverlapped))  
+        x = np.arange(-1000, 7700, 300)
+        plt.scatter(x, data)
+        plt.title("F1 Shanghai: Time cost of be overlapped from 2012 to "+ raceDict[raceId]) 
+        plt.xlabel('milliseconds')
+        plt.ylabel('probability') 
+        plt.show()
         
     def timeGap(currentLap,inputDataFrame,timeCostDict):
         timeGapList = list()
@@ -241,29 +284,7 @@ def main():
     race2015 = Race(928)
     race2016 = Race(950)
     race2017 = Race(970)
-    race2018 = Race(991)
-    
-    print(overlapCostList)
-    print(beOverlapCostList)
-    
-    data = np.array(overlapCostList) 
-    bins = np.linspace(-1000, 2000, num=30, endpoint=True, retstep=False, dtype=None)
-    plt.hist(data, bins) 
-    plt.title("F1 Shanghai: Time cost of Overlapping from 2012 to 2018 ") 
-    plt.xlabel('milliseconds')
-    plt.ylabel('numbers')
-    fileName = str("F:/Programming/F1/Thesis/CostofOverlapping/CostofOverlapping.eps")
-    plt.savefig(fileName)
-    plt.show()
-    
-    data = np.array(beOverlapCostList) 
-    bins = np.linspace(-1000, 2000, num=30, endpoint=True, retstep=False, dtype=None)
-    plt.hist(data, bins) 
-    plt.title("F1 Shanghai: Time cost of being overlapped from 2012 to 2018 ") 
-    plt.xlabel('milliseconds')
-    plt.ylabel('numbers')
-    fileName = str("F:/Programming/F1/Thesis/CostofBeOverlapped/CostofBeOverlapping.eps")
-    plt.savefig(fileName)
-    plt.show()
+    race2018 = Race(991)   
+
 if __name__ == '__main__':
     main()
