@@ -2,6 +2,8 @@
 """
 Created on Tue May 12 19:04:32 2020
 
+Overtake Logistic Part
+
 @author: Billy
 """
 
@@ -104,8 +106,6 @@ plt.scatter(xAdvScatter , advPossibility)
 plt.title('Possibility Scatter by Accumulation(ADV)')
 plt.show()
 """
-
-
 
 def overtakeJudgement(gap,adv):
     overtakeResult = {"pursuer":0,"leader":0}  

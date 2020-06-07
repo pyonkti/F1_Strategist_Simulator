@@ -2,6 +2,8 @@
 """
 Created on Thu Apr 30 00:14:26 2020
 
+Time Generator
+
 @author: Billy
 """
 

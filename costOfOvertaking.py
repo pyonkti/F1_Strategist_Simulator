@@ -2,6 +2,8 @@
 """
 Created on Sun Mar  1 20:24:40 2020
 
+Collecting Overtake Statistics
+
 @author: Billy
 """
 
@@ -134,7 +136,7 @@ def getResult(raceId):
     plt.title("F1 Shanghai: Overtake possibility distribution in relation to the gap between drivers from 2012 to "+raceDict[raceId]) 
     x = np.arange(50, 1000, 50).tolist()
     y = possibilityOnGapList
-    plt.plot(x, y, 'ro-')
+    plt.scatter(x, y)
     plt.xlabel('milliseconds (gap) with width of 100ms')
     plt.ylabel('overtake possibility under the circumstance')
     #fileName = str("F:/Programming/thesis/GapPossibility/"+raceDict[raceId]+"gapOvertakePossibility.eps")
@@ -150,7 +152,7 @@ def getResult(raceId):
     plt.title("F1 Shanghai: Overtake possibility distribution in relation to the lap time advantage between drivers from 2012 to "+raceDict[raceId]) 
     x = np.arange(0, 1900, 100).tolist()
     y = possibilityOnAdvList
-    plt.plot(x, y, 'ro-')
+    plt.scatter(x, y)
     plt.xlabel('milliseconds (advantage) with width of 100ms')
     plt.ylabel('overtake possibility under the circumstance')
     #fileName = str("F:/Programming/thesis/LapTimeAdvPossibility/"+raceDict[raceId]+"lapTimeAdvOvertakePossibility.eps")
@@ -170,7 +172,7 @@ def getResult(raceId):
     plt.scatter(x, sumData) 
     plt.title("F1 Shanghai: Time cost of Overtaking from 2012 to "+raceDict[raceId]) 
     plt.xlabel('milliseconds')
-    plt.ylabel('numbers')
+    plt.ylabel('probability')
     #fileName = str("F:/Programming/thesis/CostofOvertaking/"+raceDict[raceId]+"CostofOvertaking.eps")
     #plt.savefig(fileName)
     plt.show()
@@ -187,7 +189,7 @@ def getResult(raceId):
     plt.scatter(x, sumData) 
     plt.title("F1 Shanghai: Time cost of being Overtook from 2012 to "+raceDict[raceId]) 
     plt.xlabel('milliseconds')
-    plt.ylabel('numbers')
+    plt.ylabel('probability')
     #fileName = str("F:/Programming/thesis/CostofBeingOvertook/"+raceDict[raceId]+"CostofBeingOvertook.eps")
     #plt.savefig(fileName)
     plt.show()
@@ -196,7 +198,13 @@ def getResult(raceId):
     
     
 def main():
-    getResult(1012)
+    getResult(862)
+    getResult(882)
+    getResult(903)
+    getResult(928)
+    getResult(950)
+    getResult(970)
+    getResult(991)
 
        
 if __name__ == '__main__':
